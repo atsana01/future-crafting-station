@@ -8,46 +8,52 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 250 100% 99%;
-    --foreground: 240 15% 15%;
+    --background: 0 0% 100%;
+    --foreground: 222 90% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 15% 15%;
+    --card-foreground: 222 90% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 15% 15%;
+    --popover-foreground: 222 90% 10%;
 
-    --primary: 260 70% 60%;
+    --primary: 240 100% 50%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 195 61% 71%;
 
-    --secondary: 250 25% 95%;
-    --secondary-foreground: 240 15% 30%;
+    --secondary: 195 61% 95%;
+    --secondary-foreground: 222 90% 10%;
 
-    --muted: 250 25% 96%;
-    --muted-foreground: 240 10% 50%;
+    --muted: 195 61% 95%;
+    --muted-foreground: 222 40% 50%;
 
-    --accent: 265 75% 65%;
+    --accent: 195 61% 71%;
     --accent-foreground: 0 0% 100%;
+    --accent-glow: 195 61% 85%;
 
-    --destructive: 0 84.2% 60.2%;
+    --purple: 260 60% 65%;
+    --purple-foreground: 0 0% 100%;
+    --purple-light: 260 40% 85%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 250 20% 90%;
-    --input: 250 20% 95%;
-    --ring: 260 70% 60%;
+    --border: 195 61% 90%;
+    --input: 195 61% 90%;
+    --ring: 240 100% 50%;
 
-    /* Creative gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(260 70% 60%), hsl(280 80% 70%));
-    --gradient-secondary: linear-gradient(135deg, hsl(250 25% 96%), hsl(260 30% 98%));
-    --gradient-accent: linear-gradient(135deg, hsl(265 75% 65%), hsl(285 85% 75%));
-    
-    /* Beautiful shadows */
-    --shadow-sm: 0 2px 4px hsl(260 70% 60% / 0.1);
-    --shadow-md: 0 4px 12px hsl(260 70% 60% / 0.15);
-    --shadow-lg: 0 8px 24px hsl(260 70% 60% / 0.2);
-    --shadow-glow: 0 0 20px hsl(260 70% 60% / 0.3);
+    --dark-blue: 222 90% 10%;
+    --navy-blue: 240 100% 20%;
+    --baby-blue: 195 61% 71%;
 
-    --radius: 0.5rem;
+    /* Custom design tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(240 100% 50%), hsl(195 61% 71%));
+    --gradient-hero: linear-gradient(135deg, hsl(240 100% 50% / 0.05), hsl(195 61% 71% / 0.05));
+    --shadow-elegant: 0 10px 40px -10px hsl(240 100% 50% / 0.15);
+    --shadow-card: 0 4px 20px -4px hsl(240 100% 50% / 0.08);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -67,33 +73,33 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 222 90% 10%;
+    --foreground: 0 0% 100%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 222 90% 10%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 90% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 195 61% 71%;
+    --primary-foreground: 222 90% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 240 100% 20%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 100% 20%;
+    --muted-foreground: 195 61% 71%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 240 100% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 240 100% 20%;
+    --input: 240 100% 20%;
+    --ring: 195 61% 71%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -112,5 +118,60 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom slider styles */
+.slider-thumb {
+  background: transparent;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--background));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slider-thumb::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.slider-thumb::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--background));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+  }
+  
+  .grid {
+    gap: 1rem;
+  }
+  
+  .card {
+    padding: 1rem;
   }
 }
