@@ -8,6 +8,8 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import SendQuoteModal from '@/components/SendQuoteModal';
+import RFIModal from '@/components/RFIModal';
+import ChatModal from '@/components/ChatModal';
 
 interface QuoteRequest {
   id: string;
@@ -40,6 +42,32 @@ const VendorDashboard = () => {
     projectTitle: ''
   });
 
+  const [rfiModal, setRfiModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+    projectTitle: string;
+    clientId: string;
+  }>({
+    isOpen: false,
+    quoteRequestId: '',
+    projectTitle: '',
+    clientId: ''
+  });
+
+  const [chatModal, setChatModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+    projectTitle: string;
+    clientId: string;
+    vendorId: string;
+  }>({
+    isOpen: false,
+    quoteRequestId: '',
+    projectTitle: '',
+    clientId: '',
+    vendorId: ''
+  });
+
   useEffect(() => {
     fetchQuoteRequests();
   }, [user]);
@@ -48,45 +76,66 @@ const VendorDashboard = () => {
     if (!user) return;
     
     try {
-      // For now, use sample data - real data fetching can be implemented later
-      const sampleData = [
-      {
-        id: '1',
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        project: {
-          title: 'Modern House Construction',
-          description: '4 bedroom modern house, 2 large baths, landscaped garden and pool',
-          budget_range: '$200,000 - $300,000',
-          location: 'San Francisco, CA',
-          created_at: new Date().toISOString()
-        },
-        client: {
-          full_name: 'John Smith',
-          user_id: 'sample-user-id'
-        }
-      },
-      {
-        id: '2',
-        status: 'quoted',
-        created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        project: {
-          title: 'Kitchen Renovation',
-          description: 'Complete kitchen remodel with modern appliances',
-          budget_range: '$50,000 - $75,000',
-          location: 'Oakland, CA',
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-        },
-        client: {
-          full_name: 'Sarah Johnson',
-          user_id: 'sample-user-id-2'
+      const { data, error } = await supabase
+        .from('quote_requests')
+        .select(`
+          *,
+          projects (
+            title,
+            description,
+            budget_range,
+            location,
+            created_at
+          )
+        `)
+        .eq('vendor_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Get client profiles for each quote request
+      const clientIds = data?.map(item => item.client_id) || [];
+      let clientProfiles: any[] = [];
+      
+      if (clientIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', clientIds);
+        
+        if (!profilesError) {
+          clientProfiles = profiles || [];
         }
       }
-      ];
+
+      const formattedData = data?.map(item => {
+        const clientProfile = clientProfiles.find(p => p.user_id === item.client_id);
+        return {
+          id: item.id,
+          status: item.status,
+          created_at: item.created_at,
+          project: {
+            title: item.projects?.title || 'Untitled Project',
+            description: item.projects?.description || '',
+            budget_range: item.projects?.budget_range || 'Budget not specified',
+            location: item.projects?.location || 'Location not specified',
+            created_at: item.projects?.created_at || item.created_at
+          },
+          client: {
+            full_name: clientProfile?.full_name || 'Client',
+            user_id: item.client_id
+          }
+        };
+      }) || [];
       
-      setQuoteRequests(sampleData);
+      setQuoteRequests(formattedData);
     } catch (error) {
       console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load quote requests",
+        variant: "destructive",
+      });
       setQuoteRequests([]);
     }
     setLoading(false);
@@ -120,6 +169,26 @@ const VendorDashboard = () => {
 
   const handleQuoteSent = () => {
     fetchQuoteRequests(); // Refresh the list
+    setSendQuoteModal({ isOpen: false, quoteRequestId: '', projectTitle: '' });
+  };
+
+  const handleRFI = (quoteRequestId: string, projectTitle: string, clientId: string) => {
+    setRfiModal({
+      isOpen: true,
+      quoteRequestId,
+      projectTitle,
+      clientId
+    });
+  };
+
+  const handleChat = (quoteRequestId: string, projectTitle: string, clientId: string, vendorId: string) => {
+    setChatModal({
+      isOpen: true,
+      quoteRequestId,
+      projectTitle,
+      clientId,
+      vendorId
+    });
   };
 
   return (
@@ -257,11 +326,19 @@ const VendorDashboard = () => {
                               Send Revised Quote
                             </Button>
                           )}
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleChat(quote.id, quote.project.title, quote.client.user_id, user?.id || '')}
+                          >
                             <MessageSquare className="w-4 h-4 mr-1" />
                             Chat
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleRFI(quote.id, quote.project.title, quote.client.user_id)}
+                          >
                             RFI
                           </Button>
                         </div>
@@ -273,6 +350,32 @@ const VendorDashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Modals */}
+        <SendQuoteModal
+          isOpen={sendQuoteModal.isOpen}
+          onClose={() => setSendQuoteModal({ isOpen: false, quoteRequestId: '', projectTitle: '' })}
+          quoteRequestId={sendQuoteModal.quoteRequestId}
+          projectTitle={sendQuoteModal.projectTitle}
+          onQuoteSent={handleQuoteSent}
+        />
+
+        <RFIModal
+          isOpen={rfiModal.isOpen}
+          onClose={() => setRfiModal({ isOpen: false, quoteRequestId: '', projectTitle: '', clientId: '' })}
+          quoteRequestId={rfiModal.quoteRequestId}
+          projectTitle={rfiModal.projectTitle}
+          clientId={rfiModal.clientId}
+        />
+
+        <ChatModal
+          isOpen={chatModal.isOpen}
+          onClose={() => setChatModal({ isOpen: false, quoteRequestId: '', projectTitle: '', clientId: '', vendorId: '' })}
+          quoteRequestId={chatModal.quoteRequestId}
+          projectTitle={chatModal.projectTitle}
+          clientId={chatModal.clientId}
+          vendorId={chatModal.vendorId}
+        />
       </div>
     </div>
   );

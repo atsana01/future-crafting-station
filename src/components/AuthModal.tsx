@@ -49,20 +49,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (error) throw error;
 
       if (data.user) {
-        // Check user type in profiles table
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('user_id', data.user.id)
-          .single();
-
-        if (profile && profile.user_type !== userType) {
-          await supabase.auth.signOut();
-          toast.error(`Please use ${userType === 'client' ? 'vendor' : 'client'} login for your account type.`);
-          setLoading(false);
-          return;
-        }
-
         toast.success('Successfully signed in!');
         onSuccess?.();
         onClose();

@@ -15,6 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { Sparkles, Home, Users, Zap, ChevronRight } from 'lucide-react';
 import { getRandomExamples } from '@/data/projectExamples';
 import { TypingAnimation } from '@/components/TypingAnimation';
+import HowItWorks from '@/components/HowItWorks';
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -258,7 +259,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* Feature Cards */}
+          {/* How It Works Section */}
+          <HowItWorks />
+
+          {/* Feature Cards - Moved Lower */}
           <div className="grid md:grid-cols-3 gap-6 mt-16 max-w-5xl mx-auto">
             <Card className="text-center p-6 shadow-card hover:shadow-elegant transition-shadow">
               <CardContent className="pt-4">
@@ -278,7 +282,7 @@ const Index = () => {
                   <Users className="w-6 h-6 text-accent" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Vetted Professionals</h3>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-text-sm">
                   Connect with verified architects, contractors, and specialists who deliver quality work.
                 </p>
               </CardContent>
