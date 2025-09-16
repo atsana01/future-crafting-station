@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Mail, Lock, UserCheck, User, Building } from 'lucide-react';
+import { validateInput, sanitizeInput, logSecurityEvent, authRateLimiter } from '@/utils/security';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -38,17 +39,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Rate limiting check
+    if (!authRateLimiter.isAllowed(`signin_${email}`)) {
+      toast.error('Too many attempts. Please wait before trying again.');
+      return;
+    }
+
+    // Input validation
+    if (!validateInput(email, 254) || !validateInput(password, 128)) {
+      toast.error('Invalid email or password format.');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: sanitizeInput(email),
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        await logSecurityEvent('signin_failed', 'auth', undefined, {
+          error: error.message,
+          email: sanitizeInput(email)
+        });
+        throw error;
+      }
 
       if (data.user) {
+        await logSecurityEvent('signin_success', 'auth');
         toast.success('Successfully signed in!');
         onSuccess?.();
         onClose();
@@ -63,8 +84,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Rate limiting check
+    if (!authRateLimiter.isAllowed(`signup_${email}`)) {
+      toast.error('Too many attempts. Please wait before trying again.');
+      return;
+    }
+
+    // Input validation
+    if (!validateInput(email, 254) || !validateInput(fullName, 100) || !validateInput(password, 128)) {
+      toast.error('Please check all fields for valid input.');
+      return;
+    }
+
+    if (businessName && !validateInput(businessName, 200)) {
+      toast.error('Business name contains invalid characters.');
+      return;
+    }
+
+    if (vatId && !validateInput(vatId, 50)) {
+      toast.error('VAT ID contains invalid characters.');
+      return;
+    }
+
+    if (businessAddress && !validateInput(businessAddress, 500)) {
+      toast.error('Business address contains invalid characters.');
+      return;
+    }
+    
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
+      return;
+    }
+
+    // Strong password validation
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+    if (!strongPasswordRegex.test(password)) {
+      toast.error('Password must contain uppercase, lowercase, number, and special character');
       return;
     }
 
@@ -78,23 +138,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       const redirectUrl = `${window.location.origin}/`;
       
+      const userData: any = {
+        full_name: sanitizeInput(fullName),
+        user_type: selectedUserType,
+        phone_number: phoneNumber ? sanitizeInput(phoneNumber) : null,
+      };
+
+      if (selectedUserType === 'vendor') {
+        userData.business_name = sanitizeInput(businessName);
+        userData.vat_id = sanitizeInput(vatId);
+        userData.business_address = sanitizeInput(businessAddress);
+      }
+      
       const { error } = await supabase.auth.signUp({
-        email,
+        email: sanitizeInput(email),
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-            user_type: selectedUserType,
-            phone_number: phoneNumber || null,
-            business_name: businessName || null,
-            vat_id: vatId || null,
-            business_address: businessAddress || null,
-          }
+          data: userData
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        await logSecurityEvent('signup_failed', 'auth', undefined, {
+          error: error.message,
+          email: sanitizeInput(email),
+          user_type: selectedUserType
+        });
+        throw error;
+      }
+
+      await logSecurityEvent('signup_success', 'auth', undefined, {
+        email: sanitizeInput(email),
+        user_type: selectedUserType
+      });
 
       toast.success('Please check your email to verify your account.');
       onClose();
@@ -108,18 +185,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Rate limiting check
+    if (!authRateLimiter.isAllowed(`reset_${email}`)) {
+      toast.error('Too many password reset attempts. Please wait before trying again.');
+      return;
+    }
+    
     if (!email) {
       toast.error('Please enter your email address');
       return;
     }
 
+    if (!validateInput(email, 254)) {
+      toast.error('Invalid email format.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(sanitizeInput(email), {
         redirectTo: `${window.location.origin}/auth?type=${selectedUserType}&reset=true`
       });
 
-      if (error) throw error;
+      if (error) {
+        await logSecurityEvent('password_reset_failed', 'auth', undefined, {
+          error: error.message,
+          email: sanitizeInput(email)
+        });
+        throw error;
+      }
+
+      await logSecurityEvent('password_reset_requested', 'auth', undefined, {
+        email: sanitizeInput(email)
+      });
 
       toast.success('Password reset email sent! Check your inbox.');
       setShowForgotPassword(false);

@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Clock, FileText } from 'lucide-react';
+import { validateInput, sanitizeInput, logSecurityEvent } from '@/utils/security';
 
 interface SendQuoteModalProps {
   isOpen: boolean;
@@ -33,10 +34,32 @@ const SendQuoteModal: React.FC<SendQuoteModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Input validation
+    if (!validateInput(formData.quotedAmount, 20) || 
+        !validateInput(formData.estimatedTimeline, 100) || 
+        !validateInput(formData.vendorNotes, 2000)) {
+      toast({
+        title: 'Error',
+        description: 'Please check all fields for valid input',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     if (!formData.quotedAmount || !formData.estimatedTimeline) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const quotedAmount = parseFloat(formData.quotedAmount);
+    if (isNaN(quotedAmount) || quotedAmount <= 0) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid quote amount',
         variant: 'destructive'
       });
       return;
@@ -48,15 +71,25 @@ const SendQuoteModal: React.FC<SendQuoteModalProps> = ({
       const { error } = await supabase
         .from('quote_requests')
         .update({
-          quoted_amount: parseFloat(formData.quotedAmount),
-          estimated_timeline: formData.estimatedTimeline,
-          vendor_notes: formData.vendorNotes,
+          quoted_amount: quotedAmount,
+          estimated_timeline: sanitizeInput(formData.estimatedTimeline),
+          vendor_notes: sanitizeInput(formData.vendorNotes),
           status: 'quoted',
           responded_at: new Date().toISOString()
         })
         .eq('id', quoteRequestId);
 
-      if (error) throw error;
+      if (error) {
+        await logSecurityEvent('quote_submission_failed', 'quote_requests', quoteRequestId, {
+          error: error.message,
+          quote_amount: quotedAmount
+        });
+        throw error;
+      }
+
+      await logSecurityEvent('quote_submitted', 'quote_requests', quoteRequestId, {
+        quote_amount: quotedAmount
+      });
 
       toast({
         title: 'Quote Sent',

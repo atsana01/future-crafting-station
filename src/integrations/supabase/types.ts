@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string
+          table_name: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id: string
+          table_name: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           file_url: string | null
@@ -57,6 +90,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      password_reset_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -109,6 +169,48 @@ export type Database = {
         }
         Relationships: []
       }
+      project_vendors: {
+        Row: {
+          id: string
+          project_id: string
+          removed_at: string | null
+          selected_at: string
+          selection_status: string
+          vendor_id: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          removed_at?: string | null
+          selected_at?: string
+          selection_status?: string
+          vendor_id: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          removed_at?: string | null
+          selected_at?: string
+          selection_status?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_vendors_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_vendors_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           budget_range: string | null
@@ -117,13 +219,16 @@ export type Database = {
           description: string
           form_data: Json | null
           id: string
+          is_active: boolean | null
           location: string | null
+          project_name: string | null
           project_type: string | null
           service_groups: string[] | null
           status: Database["public"]["Enums"]["project_status"] | null
           timeline: string | null
           title: string
           updated_at: string
+          vendor_selections: Json | null
         }
         Insert: {
           budget_range?: string | null
@@ -132,13 +237,16 @@ export type Database = {
           description: string
           form_data?: Json | null
           id?: string
+          is_active?: boolean | null
           location?: string | null
+          project_name?: string | null
           project_type?: string | null
           service_groups?: string[] | null
           status?: Database["public"]["Enums"]["project_status"] | null
           timeline?: string | null
           title: string
           updated_at?: string
+          vendor_selections?: Json | null
         }
         Update: {
           budget_range?: string | null
@@ -147,13 +255,16 @@ export type Database = {
           description?: string
           form_data?: Json | null
           id?: string
+          is_active?: boolean | null
           location?: string | null
+          project_name?: string | null
           project_type?: string | null
           service_groups?: string[] | null
           status?: Database["public"]["Enums"]["project_status"] | null
           timeline?: string | null
           title?: string
           updated_at?: string
+          vendor_selections?: Json | null
         }
         Relationships: []
       }
@@ -161,6 +272,8 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          deleted_at: string | null
+          deletion_reason: string | null
           estimated_timeline: string | null
           id: string
           project_id: string
@@ -175,6 +288,8 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string
+          deleted_at?: string | null
+          deletion_reason?: string | null
           estimated_timeline?: string | null
           id?: string
           project_id: string
@@ -189,6 +304,8 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
+          deleted_at?: string | null
+          deletion_reason?: string | null
           estimated_timeline?: string | null
           id?: string
           project_id?: string
@@ -209,6 +326,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          resource_id: string | null
+          resource_type: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       vendor_profiles: {
         Row: {
@@ -359,6 +512,15 @@ export type Database = {
           years_experience: number
         }[]
       }
+      log_security_event: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_resource_id?: string
+          p_resource_type: string
+        }
+        Returns: undefined
+      }
       log_vendor_profile_access: {
         Args: {
           access_type: string
@@ -366,6 +528,10 @@ export type Database = {
           vendor_user_id: string
         }
         Returns: undefined
+      }
+      validate_input_security: {
+        Args: { input_text: string; max_length?: number }
+        Returns: boolean
       }
     }
     Enums: {
