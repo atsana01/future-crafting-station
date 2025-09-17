@@ -45,9 +45,12 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ projectDescriptio
 
   // Extract number of bedrooms and bathrooms from description
   const bedroomMatch = projectDescription.match(/(\d+)\s*bedroom/i);
-  const bathroomMatch = projectDescription.match(/(\d+)\s*bath/i);
+  const bathroomMatch = projectDescription.match(/(\d+)\s*bath/i);  
   const numBedrooms = bedroomMatch ? parseInt(bedroomMatch[1]) : 3;
   const numBathrooms = bathroomMatch ? parseInt(bathroomMatch[1]) : 2;
+
+  console.log('Bedroom match:', bedroomMatch, 'Bathroom match:', bathroomMatch);
+  console.log('Num bedrooms:', numBedrooms, 'Num bathrooms:', numBathrooms);
   const hasPool = projectDescription.toLowerCase().includes('pool');
   const hasGarden = projectDescription.toLowerCase().includes('garden');
 
@@ -381,7 +384,7 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ projectDescriptio
             Previous
           </Button>
           
-          <Button onClick={handleNext} className="bg-gradient-primary border-0">
+          <Button onClick={handleNext} variant="modern" size="lg">
             {currentStep === steps.length - 1 ? 'Generate Matches' : 'Next'}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>

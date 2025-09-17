@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { EyeIcon, EyeOffIcon, AlertCircle, Mail } from 'lucide-react';
+import { EyeIcon, EyeOffIcon, AlertCircle, Mail, ChevronLeft } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -144,6 +144,18 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        {/* Go Back Button */}
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="bg-white/10 backdrop-blur-sm border border-white/20 text-foreground hover:bg-white/20 transition-all duration-200"
+            size="default"
+          >
+            <ChevronLeft className="w-4 h-4 mr-2" />
+            Go to previous page
+          </Button>
+        </div>
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-8">
           <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="BuildEasy Logo" className="h-32 w-auto object-contain" />
@@ -229,7 +241,9 @@ const Auth = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-primary border-0 hover:opacity-90"
+                    variant="modern"
+                    size="lg"
+                    className="w-full"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Signing In...' : 'Sign In'}
@@ -342,7 +356,9 @@ const Auth = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-primary border-0 hover:opacity-90"
+                    variant="modern"
+                    size="lg"
+                    className="w-full"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -392,7 +408,9 @@ const Auth = () => {
 
                     <Button
                       type="submit"
-                      className="w-full bg-gradient-primary border-0 hover:opacity-90"
+                      variant="modern"
+                      size="lg"
+                      className="w-full"
                       disabled={isResetLoading}
                     >
                       {isResetLoading ? 'Sending...' : 'Send Reset Link'}

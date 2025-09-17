@@ -6,7 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import EnhancedQuestionnaireForm from '@/components/EnhancedQuestionnaireForm';
 import ServiceGroups from '@/components/ServiceGroups';
 import { AuthButton } from '@/components/AuthButton';
-import { AuthModal } from '@/components/AuthModal';
+import { LoginModal } from '@/components/LoginModal';
+import { SignupModal } from '@/components/SignupModal';
 import { Footer } from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuoteForm } from '@/contexts/QuoteFormContext';
@@ -30,7 +31,8 @@ const Index = () => {
     setRedirectPath
   } = useQuoteForm();
   const [animatedText, setAnimatedText] = useState('Modern family house');
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
   const [currentExamples, setCurrentExamples] = useState(() => getRandomExamples(3));
 
   useEffect(() => {
@@ -67,7 +69,7 @@ const Index = () => {
       // Store current progress and show auth modal
       setWasRedirectedFromAuth(true);
       setRedirectPath('/');
-      setShowAuthModal(true);
+      setShowLoginModal(true);
       return;
     }
 
@@ -193,10 +195,10 @@ const Index = () => {
             {/* Split Login/Signup Buttons */}
             {!user ? (
               <div className="flex items-center gap-3">
-                <Button onClick={() => setShowAuthModal(true)} variant="ghost">
+                <Button onClick={() => setShowLoginModal(true)} variant="outline" size="default">
                   Login
                 </Button>
-                <Button onClick={() => setShowAuthModal(true)} variant="outline">
+                <Button onClick={() => setShowSignupModal(true)} variant="modern" size="default">
                   Sign Up
                 </Button>
               </div>
@@ -256,8 +258,8 @@ const Index = () => {
                 </div>
                 
                 <div className="flex justify-center">
-                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} size="sm" className="bg-gradient-primary border-0 px-6">
-                    Build
+                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} variant="modern" size="xl" className="px-12 shadow-glow">
+                    Build My Project
                   </Button>
                 </div>
               </div>
@@ -275,14 +277,29 @@ const Index = () => {
       {/* Footer */}
       <Footer />
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-        userType="client"
+      {/* Auth Modals */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)}
         onSuccess={() => {
-          setShowAuthModal(false);
+          setShowLoginModal(false);
           // Continue with the vendor selection process
+        }}
+        onSwitchToSignup={() => {
+          setShowLoginModal(false);
+          setShowSignupModal(true);
+        }}
+      />
+      
+      <SignupModal 
+        isOpen={showSignupModal} 
+        onClose={() => setShowSignupModal(false)}
+        onSuccess={() => {
+          setShowSignupModal(false);
+        }}
+        onSwitchToLogin={() => {
+          setShowSignupModal(false);
+          setShowLoginModal(true);
         }}
       />
     </div>;
