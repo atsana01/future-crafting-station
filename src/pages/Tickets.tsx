@@ -298,10 +298,6 @@ const ClientDashboard = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button onClick={() => navigate('/profile')} variant="outline">
-              <Settings className="w-4 h-4 mr-2" />
-              Profile Settings
-            </Button>
             <Button onClick={handleBackToProject} className="bg-gradient-primary">
               <Plus className="w-4 h-4 mr-2" />
               New Project

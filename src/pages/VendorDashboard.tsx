@@ -7,9 +7,9 @@ import { Building, Star, Clock, MessageSquare, DollarSign, User } from 'lucide-r
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import SendQuoteModal from '@/components/SendQuoteModal';
+import EnhancedSendQuoteModal from '@/components/EnhancedSendQuoteModal';
 import RFIModal from '@/components/RFIModal';
-import ChatModal from '@/components/ChatModal';
+import EnhancedChatModal from '@/components/EnhancedChatModal';
 
 interface QuoteRequest {
   id: string;
@@ -285,12 +285,15 @@ const VendorDashboard = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">{quote.project.title}</h3>
+                            <h3 className="font-semibold text-lg">{quote.client.full_name}</h3>
                             <Badge variant={getStatusBadgeVariant(quote.status)}>
                               {quote.status}
                             </Badge>
                           </div>
                           <p className="text-muted-foreground text-sm mb-2">
+                            {quote.project.title}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
                             {quote.project.description}
                           </p>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -352,7 +355,7 @@ const VendorDashboard = () => {
         </Card>
 
         {/* Modals */}
-        <SendQuoteModal
+        <EnhancedSendQuoteModal
           isOpen={sendQuoteModal.isOpen}
           onClose={() => setSendQuoteModal({ isOpen: false, quoteRequestId: '', projectTitle: '' })}
           quoteRequestId={sendQuoteModal.quoteRequestId}
@@ -368,7 +371,7 @@ const VendorDashboard = () => {
           clientId={rfiModal.clientId}
         />
 
-        <ChatModal
+        <EnhancedChatModal
           isOpen={chatModal.isOpen}
           onClose={() => setChatModal({ isOpen: false, quoteRequestId: '', projectTitle: '', clientId: '', vendorId: '' })}
           quoteRequestId={chatModal.quoteRequestId}

@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, Settings, ChevronDown, Building } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Building, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -86,7 +86,7 @@ export const AuthButton = () => {
         
         <DropdownMenuItem asChild>
           <Link to="/tickets" className="w-full cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
+            <LayoutDashboard className="mr-2 h-4 w-4" />
             {userType === 'vendor' ? 'Vendor Dashboard' : 'Dashboard'}
           </Link>
         </DropdownMenuItem>
