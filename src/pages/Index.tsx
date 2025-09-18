@@ -189,7 +189,12 @@ const Index = () => {
           {/* Header with Auth Buttons */}
           <div className="flex items-center justify-between w-full mb-16">
             <div className="flex items-center space-x-2">
-              <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="BuildEasy Logo" className="h-24 w-auto object-contain" />
+              <img 
+                src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" 
+                alt="BuildEasy Logo" 
+                className="h-24 w-auto object-contain cursor-pointer hover:scale-105 transition-transform" 
+                onClick={() => navigate('/')}
+              />
             </div>
             
             {/* Split Login/Signup Buttons */}
@@ -216,7 +221,7 @@ const Index = () => {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Describe your dream project and let our AI connect you with the perfect professionals to make it happen.
+              AI-powered matching with trusted professionals to bring your vision to life.
             </p>
           </div>
 
@@ -258,7 +263,7 @@ const Index = () => {
                 </div>
                 
                 <div className="flex justify-center">
-                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} variant="modern" size="xl" className="px-12 shadow-glow">
+                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} variant="modern" size="xl" className="px-12 shadow-glow bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-semibold">
                     Build My Project
                   </Button>
                 </div>

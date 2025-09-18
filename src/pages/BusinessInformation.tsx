@@ -77,6 +77,9 @@ const BusinessInformation = () => {
     portfolio_images: [],
     about_business: ''
   });
+  
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [portfolioImages, setPortfolioImages] = useState<{ [category: string]: Array<{ url: string; caption: string }> }>({});
 
   useEffect(() => {
     fetchVendorProfile();
@@ -96,6 +99,9 @@ const BusinessInformation = () => {
       if (error && error.code !== 'PGRST116') throw error;
       
       if (data) {
+        const categories = data.vendor_category ? data.vendor_category.split(',') : [];
+        setSelectedCategories(categories);
+        
         setFormData({
           business_name: data.business_name || '',
           vat_id: data.vat_id || '',
@@ -116,6 +122,13 @@ const BusinessInformation = () => {
           portfolio_images: (data.portfolio_images as Array<{ url: string; caption: string }>) || [],
           about_business: data.about_business || ''
         });
+        
+        // Organize portfolio images by category
+        const organizedImages: { [category: string]: Array<{ url: string; caption: string }> } = {};
+        categories.forEach(cat => {
+          organizedImages[cat] = [];
+        });
+        setPortfolioImages(organizedImages);
       } else {
         // Initialize with user email if no profile exists
         setFormData(prev => ({
@@ -184,7 +197,7 @@ const BusinessInformation = () => {
         website: sanitizeInput(formData.website),
         phone: sanitizeInput(formData.phone),
         email: sanitizeInput(formData.email),
-        vendor_category: formData.vendor_category,
+        vendor_category: selectedCategories.join(','), // Store as comma-separated string
         price_range_min: formData.price_range_min || null,
         price_range_max: formData.price_range_max || null,
         year_established: formData.year_established,
@@ -387,10 +400,19 @@ const BusinessInformation = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="vendor_category">Vendor Category *</Label>
-                  <Select value={formData.vendor_category} onValueChange={(value) => setFormData(prev => ({ ...prev, vendor_category: value }))}>
+                  <Label htmlFor="vendor_category">Vendor Categories *</Label>
+                  <Select 
+                    value={selectedCategories.length > 0 ? selectedCategories[0] : ''} 
+                    onValueChange={(value) => {
+                      if (value && !selectedCategories.includes(value)) {
+                        const newCategories = [...selectedCategories, value];
+                        setSelectedCategories(newCategories);
+                        setFormData(prev => ({ ...prev, vendor_category: newCategories.join(',') }));
+                      }
+                    }}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your category" />
+                      <SelectValue placeholder="Select categories" />
                     </SelectTrigger>
                     <SelectContent>
                       {VENDOR_CATEGORIES.map((category) => (
@@ -400,6 +422,28 @@ const BusinessInformation = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {selectedCategories.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedCategories.map((category) => (
+                        <div key={category} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
+                          {category}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0 hover:bg-destructive/10"
+                            onClick={() => {
+                              const newCategories = selectedCategories.filter(c => c !== category);
+                              setSelectedCategories(newCategories);
+                              setFormData(prev => ({ ...prev, vendor_category: newCategories.join(',') }));
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="year_established">Year Established *</Label>
@@ -502,6 +546,76 @@ const BusinessInformation = () => {
                     placeholder="Insurance Company Name"
                   />
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Business Portfolio */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Portfolio</CardTitle>
+              <CardDescription>Upload images to showcase your work by category</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedCategories.length > 0 ? (
+                selectedCategories.map((category) => (
+                  <div key={category} className="space-y-3 p-4 border rounded-lg">
+                    <h4 className="font-semibold">{category}</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {portfolioImages[category]?.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={image.url}
+                            alt={image.caption}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                            onClick={() => {
+                              const newImages = { ...portfolioImages };
+                              newImages[category] = newImages[category].filter((_, i) => i !== index);
+                              setPortfolioImages(newImages);
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      )) || []}
+                      <label className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-gray-400 h-24 flex items-center justify-center">
+                        <div>
+                          <Upload className="w-6 h-6 mx-auto mb-1 text-gray-400" />
+                          <span className="text-xs text-gray-500">Add Image</span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              // For demo purposes, using a placeholder URL
+                              // In real implementation, upload to Supabase storage
+                              const newImages = { ...portfolioImages };
+                              if (!newImages[category]) newImages[category] = [];
+                              newImages[category].push({
+                                url: URL.createObjectURL(file),
+                                caption: file.name
+                              });
+                              setPortfolioImages(newImages);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  Please select vendor categories above to add portfolio images for each category.
+                </p>
               )}
             </CardContent>
           </Card>

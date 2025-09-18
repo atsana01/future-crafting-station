@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, Star, Clock, MessageSquare, DollarSign, User } from 'lucide-react';
+import { Building, Star, Clock, MessageSquare, DollarSign, User, MonitorSpeaker } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -151,6 +151,15 @@ const VendorDashboard = () => {
     }
   };
 
+  // Helper function to format client name for vendor display
+  const formatClientName = (fullName: string) => {
+    const names = fullName.trim().split(' ');
+    if (names.length === 1) return names[0];
+    const firstName = names[0];
+    const lastNameInitial = names[names.length - 1].charAt(0);
+    return `${firstName} ${lastNameInitial}.`;
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -198,7 +207,7 @@ const VendorDashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-2">
             <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center">
-              <Building className="w-6 h-6 text-white" />
+              <MonitorSpeaker className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
@@ -206,9 +215,9 @@ const VendorDashboard = () => {
             </div>
           </div>
           <Button asChild variant="outline">
-            <Link to="/vendor-profile">
+            <Link to="/business-information">
               <User className="w-4 h-4 mr-2" />
-              Profile Settings
+              Business Information
             </Link>
           </Button>
         </div>
@@ -285,7 +294,7 @@ const VendorDashboard = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">{quote.client.full_name}</h3>
+                            <h3 className="font-semibold text-lg">{formatClientName(quote.client.full_name)}</h3>
                             <Badge variant={getStatusBadgeVariant(quote.status)}>
                               {quote.status}
                             </Badge>
@@ -311,37 +320,40 @@ const VendorDashboard = () => {
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 ml-4">
-                          {quote.status === 'pending' && (
-                            <Button 
-                              size="sm" 
-                              className="bg-gradient-primary"
-                              onClick={() => handleSendQuote(quote.id, quote.project.title)}
-                            >
-                              Send Quote
-                            </Button>
-                          )}
-                          {quote.status === 'quoted' && (
-                            <Button 
-                              size="sm" 
-                              variant="secondary"
-                              onClick={() => handleSendQuote(quote.id, quote.project.title)}
-                            >
-                              Send Revised Quote
-                            </Button>
-                          )}
                           <Button 
-                            variant="outline" 
+                            variant="modern" 
                             size="sm"
                             onClick={() => handleChat(quote.id, quote.project.title, quote.client.user_id, user?.id || '')}
                           >
                             <MessageSquare className="w-4 h-4 mr-1" />
                             Chat
                           </Button>
+                          {quote.status === 'pending' && (
+                            <Button 
+                              size="sm" 
+                              variant="modern"
+                              onClick={() => handleSendQuote(quote.id, quote.project.title)}
+                            >
+                              <DollarSign className="w-4 h-4 mr-1" />
+                              Send Quote
+                            </Button>
+                          )}
+                          {quote.status === 'quoted' && (
+                            <Button 
+                              size="sm" 
+                              variant="modern"
+                              onClick={() => handleSendQuote(quote.id, quote.project.title)}
+                            >
+                              <DollarSign className="w-4 h-4 mr-1" />
+                              Update Quote
+                            </Button>
+                          )}
                           <Button 
-                            variant="outline" 
+                            variant="modern" 
                             size="sm"
                             onClick={() => handleRFI(quote.id, quote.project.title, quote.client.user_id)}
                           >
+                            <MessageSquare className="w-4 h-4 mr-1" />
                             RFI
                           </Button>
                         </div>

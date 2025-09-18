@@ -148,7 +148,13 @@ const Auth = () => {
         <div className="mb-6">
           <Button 
             variant="ghost" 
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/');
+              }
+            }}
             className="bg-white/10 backdrop-blur-sm border border-white/20 text-foreground hover:bg-white/20 transition-all duration-200"
             size="default"
           >
@@ -158,7 +164,12 @@ const Auth = () => {
         </div>
         {/* Logo */}
         <div className="flex items-center justify-center space-x-2 mb-8">
-          <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="BuildEasy Logo" className="h-32 w-auto object-contain" />
+          <img 
+            src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" 
+            alt="BuildEasy Logo" 
+            className="h-32 w-auto object-contain cursor-pointer hover:scale-105 transition-transform" 
+            onClick={() => navigate('/')}
+          />
         </div>
 
         <Card className="shadow-elegant bg-white/90 backdrop-blur-sm border border-white/20">

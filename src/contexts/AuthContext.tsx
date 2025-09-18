@@ -34,8 +34,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Handle Google OAuth user type assignment (deferred to avoid hook issues)
-        if (event === 'SIGNED_IN' && session?.user && !session.user.user_metadata?.user_type) {
+        // Handle redirect after login based on user type
+        if (event === 'SIGNED_IN' && session?.user) {
           setTimeout(() => {
             supabase
               .from('profiles')
@@ -43,8 +43,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq('user_id', session.user.id)
               .single()
               .then(({ data: profile }) => {
-                // If no profile exists, this will be handled by the trigger
-                // The trigger will create a profile with default user_type 'client'
+                if (profile?.user_type === 'vendor') {
+                  // Vendors should only access tickets page
+                  window.location.href = '/tickets';
+                } else {
+                  // Clients can access any page they were trying to reach
+                  const currentPath = window.location.pathname;
+                  if (currentPath === '/auth') {
+                    window.location.href = '/tickets';
+                  }
+                }
               });
           }, 0);
         }
