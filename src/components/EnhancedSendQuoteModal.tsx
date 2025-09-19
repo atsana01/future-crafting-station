@@ -267,7 +267,7 @@ const EnhancedSendQuoteModal: React.FC<SendQuoteModalProps> = ({
             <div className="space-y-2">
               <Label htmlFor="totalAmount" className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4" />
-                Total Quote Amount (USD) *
+                Total Quote Amount (EUR) *
               </Label>
               <Input
                 id="totalAmount"

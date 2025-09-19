@@ -85,7 +85,7 @@ export const AuthButton = () => {
         <DropdownMenuSeparator />
         
         <DropdownMenuItem asChild>
-          <Link to="/tickets" className="w-full cursor-pointer">
+          <Link to={userType === 'vendor' ? '/vendor-dashboard' : '/tickets'} className="w-full cursor-pointer">
             <LayoutDashboard className="mr-2 h-4 w-4" />
             {userType === 'vendor' ? 'Vendor Dashboard' : 'Dashboard'}
           </Link>
@@ -100,7 +100,7 @@ export const AuthButton = () => {
 
         {userType === 'vendor' && (
           <DropdownMenuItem asChild>
-            <Link to="/business-info" className="w-full cursor-pointer">
+            <Link to="/business-information" className="w-full cursor-pointer">
               <Building className="mr-2 h-4 w-4" />
               Business Information
             </Link>

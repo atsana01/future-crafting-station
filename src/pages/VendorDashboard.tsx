@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, Star, Clock, MessageSquare, DollarSign, User, MonitorSpeaker } from 'lucide-react';
+import { Building, Star, Clock, MessageSquare, Euro, User, MonitorSpeaker } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -307,7 +307,7 @@ const VendorDashboard = () => {
                           </p>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span className="flex items-center gap-1">
-                              <DollarSign className="w-4 h-4" />
+                              <Euro className="w-4 h-4" />
                               {quote.project.budget_range}
                             </span>
                             <span className="flex items-center gap-1">
@@ -334,7 +334,7 @@ const VendorDashboard = () => {
                               variant="modern"
                               onClick={() => handleSendQuote(quote.id, quote.project.title)}
                             >
-                              <DollarSign className="w-4 h-4 mr-1" />
+                              <Euro className="w-4 h-4 mr-1" />
                               Send Quote
                             </Button>
                           )}
@@ -344,7 +344,7 @@ const VendorDashboard = () => {
                               variant="modern"
                               onClick={() => handleSendQuote(quote.id, quote.project.title)}
                             >
-                              <DollarSign className="w-4 h-4 mr-1" />
+                              <Euro className="w-4 h-4 mr-1" />
                               Update Quote
                             </Button>
                           )}

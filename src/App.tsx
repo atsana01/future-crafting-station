@@ -25,6 +25,7 @@ import AcceptableUse from "./pages/AcceptableUse";
 import ResetPassword from "./pages/ResetPassword";
 import QuotesHistory from "./pages/QuotesHistory";
 import PaymentBilling from "./pages/PaymentBilling";
+import VendorDashboard from "./pages/VendorDashboard";
 import { RoleGuard } from "./components/RoleGuard";
 
 const queryClient = new QueryClient();
@@ -61,9 +62,14 @@ const App = () => (
                         <Route path="/cookies" element={<Cookies />} />
                         <Route path="/acceptable-use" element={<AcceptableUse />} />
                         <Route path="/dashboard" element={<Navigate to="/tickets" replace />} />
-                        <Route path="/business-info" element={
+                        <Route path="/business-information" element={
                           <RoleGuard allowedUserTypes={['vendor']}>
                             <BusinessInformation />
+                          </RoleGuard>
+                        } />
+                        <Route path="/vendor-dashboard" element={
+                          <RoleGuard allowedUserTypes={['vendor']}>
+                            <VendorDashboard />
                           </RoleGuard>
                         } />
                         <Route path="/profile" element={

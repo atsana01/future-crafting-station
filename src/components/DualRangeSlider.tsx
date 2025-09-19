@@ -15,7 +15,7 @@ const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
   step = 1000,
   value,
   onChange,
-  formatValue = (val) => val >= 1000000 ? '$1M+' : `$${(val / 1000)}K`
+  formatValue = (val) => val >= 1000000 ? '€1M+' : `€${(val / 1000)}K`
 }) => {
   const [isDragging, setIsDragging] = useState<'min' | 'max' | null>(null);
 

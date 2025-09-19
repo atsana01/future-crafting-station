@@ -43,14 +43,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq('user_id', session.user.id)
               .single()
               .then(({ data: profile }) => {
+                const currentPath = window.location.pathname;
                 if (profile?.user_type === 'vendor') {
-                  // Vendors should only access tickets page
-                  window.location.href = '/tickets';
+                  // Vendors should go to vendor dashboard unless already there
+                  if (currentPath === '/auth' || currentPath === '/') {
+                    window.location.href = '/vendor-dashboard';
+                  }
                 } else {
                   // Clients can access any page they were trying to reach
-                  const currentPath = window.location.pathname;
                   if (currentPath === '/auth') {
-                    window.location.href = '/tickets';
+                    window.location.href = '/';
                   }
                 }
               });

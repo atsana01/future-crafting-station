@@ -679,7 +679,7 @@ const EnhancedQuestionnaireForm: React.FC<EnhancedQuestionnaireFormProps> = ({ p
                 step={5000}
                 value={formData.budget}
                 onChange={(budget) => setFormData({...formData, budget})}
-                formatValue={(val) => val >= 1000000 ? '$1M+' : `$${(val / 1000)}K`}
+                formatValue={(val) => val >= 1000000 ? '€1M+' : `€${(val / 1000)}K`}
               />
             </div>
           </div>

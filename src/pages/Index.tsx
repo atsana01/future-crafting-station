@@ -221,7 +221,7 @@ const Index = () => {
               </span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Describe your project—our AI matches you with the right pros fast.
+              Share your vision, get matched with verified professionals instantly.
             </p>
           </div>
 
@@ -263,8 +263,8 @@ const Index = () => {
                 </div>
                 
                 <div className="flex justify-center">
-                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} variant="modern" size="xl" className="px-16 py-4 text-xl shadow-glow bg-gradient-to-r from-primary via-accent to-purple hover:from-primary/90 hover:via-accent/90 hover:to-purple/90 text-white font-bold border-2 border-white/20 hover:border-white/30 transform hover:scale-105 transition-all duration-300">
-                    🚀 Build My Project
+                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} variant="modern" size="xl" className="px-16 py-4 text-xl shadow-glow bg-gradient-to-r from-primary via-accent to-purple hover:from-primary/90 hover:via-accent/90 hover:to-purple/90 text-white font-bold border-2 border-white/20 hover:border-white/30 transform hover:scale-105 transition-all duration-300 shadow-2xl ring-2 ring-primary/20">
+                    Build My Project
                   </Button>
                 </div>
               </div>
@@ -272,7 +272,9 @@ const Index = () => {
           </Card>
 
           {/* How It Works Section */}
-          <HowItWorks />
+          <div className="mt-8">
+            <HowItWorks />
+          </div>
 
           {/* Feature Cards - Removed per requirements */}
 
