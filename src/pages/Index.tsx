@@ -263,7 +263,7 @@ const Index = () => {
                 </div>
                 
                 <div className="flex justify-center">
-                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} variant="modern" size="xl" className="px-16 py-4 text-xl shadow-glow bg-gradient-to-r from-primary via-accent to-purple hover:from-primary/90 hover:via-accent/90 hover:to-purple/90 text-white font-bold border-2 border-white/20 hover:border-white/30 transform hover:scale-105 transition-all duration-300 shadow-2xl ring-2 ring-primary/20">
+                  <Button onClick={handleProjectSubmit} disabled={!projectData.description.trim()} variant="modern" size="xl" className="px-16 py-4 text-xl">
                     Build My Project
                   </Button>
                 </div>

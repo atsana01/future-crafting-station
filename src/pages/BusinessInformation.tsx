@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Building, Upload, Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
+import { Building, Upload, Plus, Trash2, Save, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { validateInput, sanitizeInput, logSecurityEvent } from '@/utils/security';
 import BusinessPortfolio from '@/components/BusinessPortfolio';
@@ -30,7 +30,7 @@ interface VendorProfile {
   insurance_provider: string;
   service_radius: string;
   team_size: number;
-  licenses_certifications: Array<{ name: string; issuer: string; year: number }>;
+  licenses_certifications: Array<{ name: string; issuer: string; year: number; etek_registered?: boolean }>;
   portfolio_images: Array<{ url: string; caption: string }>;
   about_business: string;
 }
@@ -251,7 +251,7 @@ const BusinessInformation = () => {
   const addLicense = () => {
     setFormData(prev => ({
       ...prev,
-      licenses_certifications: [...prev.licenses_certifications, { name: '', issuer: '', year: new Date().getFullYear() }]
+      licenses_certifications: [...prev.licenses_certifications, { name: '', issuer: '', year: new Date().getFullYear(), etek_registered: false }]
     }));
   };
 
@@ -262,7 +262,7 @@ const BusinessInformation = () => {
     }));
   };
 
-  const updateLicense = (index: number, field: string, value: string | number) => {
+  const updateLicense = (index: number, field: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       licenses_certifications: prev.licenses_certifications.map((license, i) => 
@@ -632,7 +632,7 @@ const BusinessInformation = () => {
                   Add License
                 </Button>
               </CardTitle>
-              <CardDescription>Professional licenses and certifications (optional)</CardDescription>
+              <CardDescription>Professional licenses and certifications. Check ETEK for members of the <a href="https://www.etek.org.cy" target="_blank" className="text-primary hover:underline">Cyprus Board of Engineers</a></CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {formData.licenses_certifications.map((license, index) => (
@@ -663,7 +663,17 @@ const BusinessInformation = () => {
                       onChange={(e) => updateLicense(index, 'year', parseInt(e.target.value))}
                     />
                   </div>
-                  <div className="flex items-end">
+                  <div className="flex flex-col justify-start gap-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`etek-${index}`}
+                        checked={license.etek_registered || false}
+                        onCheckedChange={(checked) => updateLicense(index, 'etek_registered', checked as boolean)}
+                      />
+                      <Label htmlFor={`etek-${index}`} className="text-sm">
+                        ETEK Registered
+                      </Label>
+                    </div>
                     <Button type="button" variant="outline" size="sm" onClick={() => removeLicense(index)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>

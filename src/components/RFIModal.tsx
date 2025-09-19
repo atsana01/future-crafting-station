@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, HelpCircle, Clock, CheckCircle } from 'lucide-react';
+import { BsCardChecklist } from 'react-icons/bs';
 
 interface RFIModalProps {
   isOpen: boolean;
@@ -96,7 +97,7 @@ const RFIModal: React.FC<RFIModalProps> = ({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <HelpCircle className="w-5 h-5" />
+            <BsCardChecklist className="w-5 h-5" />
             Request for Information - "{projectTitle}"
           </DialogTitle>
         </DialogHeader>

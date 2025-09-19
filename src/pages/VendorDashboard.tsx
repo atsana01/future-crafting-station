@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, Star, Clock, MessageSquare, Euro, User, MonitorSpeaker } from 'lucide-react';
+import { Building, Star, Clock, MessageSquare, Euro, User, MonitorSpeaker, Trash2 } from 'lucide-react';
+import { BsCardChecklist } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -32,6 +33,8 @@ const VendorDashboard = () => {
   const { user } = useAuth();
   const [quoteRequests, setQuoteRequests] = useState<QuoteRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedQuotes, setSelectedQuotes] = useState<string[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
   const [sendQuoteModal, setSendQuoteModal] = useState<{
     isOpen: boolean;
     quoteRequestId: string;
@@ -89,6 +92,7 @@ const VendorDashboard = () => {
           )
         `)
         .eq('vendor_id', user.id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -160,6 +164,13 @@ const VendorDashboard = () => {
     return `${firstName} ${lastNameInitial}.`;
   };
 
+  // Check if vendor is ETEK registered
+  const isETEKRegistered = (vendorId: string) => {
+    // This would typically check vendor profile for ETEK registration
+    // For now, return false as placeholder
+    return false;
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -198,6 +209,34 @@ const VendorDashboard = () => {
       clientId,
       vendorId
     });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedQuotes.length === 0) return;
+    
+    try {
+      const { error } = await supabase
+        .from('quote_requests')
+        .update({ deleted_at: new Date().toISOString() })
+        .in('id', selectedQuotes);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${selectedQuotes.length} quote request(s) deleted successfully`,
+      });
+
+      setSelectedQuotes([]);
+      setIsSelecting(false);
+      fetchQuoteRequests(); // Refresh the list
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete quote requests",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -271,10 +310,36 @@ const VendorDashboard = () => {
         {/* Quote Requests */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" />
-              Quote Requests
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Quote Requests
+              </CardTitle>
+              <div className="flex gap-2">
+                {isSelecting && selectedQuotes.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteSelected}
+                    className="text-destructive bg-background border border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete Selected ({selectedQuotes.length})
+                  </Button>
+                )}
+                <Button
+                  variant={isSelecting ? "outline" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setIsSelecting(!isSelecting);
+                    setSelectedQuotes([]);
+                  }}
+                  className={isSelecting ? "text-destructive border-destructive hover:bg-destructive/10" : ""}
+                >
+                  {isSelecting ? "Cancel" : "Select Multiple"}
+                </Button>
+              </div>
+            </div>
             <CardDescription>
               Manage incoming project requests and send quotes
             </CardDescription>
@@ -289,8 +354,25 @@ const VendorDashboard = () => {
             ) : (
               <div className="space-y-4">
                 {quoteRequests.map((quote) => (
-                  <Card key={quote.id} className="hover:shadow-lg transition-shadow">
+                  <Card key={quote.id} className={`hover:shadow-lg transition-shadow ${isSelecting && selectedQuotes.includes(quote.id) ? 'ring-2 ring-destructive' : ''}`}>
                     <CardContent className="p-6">
+                      {isSelecting && (
+                        <div className="flex items-center mb-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedQuotes.includes(quote.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedQuotes([...selectedQuotes, quote.id]);
+                              } else {
+                                setSelectedQuotes(selectedQuotes.filter(id => id !== quote.id));
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-muted-foreground">Select for deletion</span>
+                        </div>
+                      )}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
@@ -353,7 +435,7 @@ const VendorDashboard = () => {
                             size="sm"
                             onClick={() => handleRFI(quote.id, quote.project.title, quote.client.user_id)}
                           >
-                            <MessageSquare className="w-4 h-4 mr-1" />
+                            <BsCardChecklist className="w-4 h-4 mr-1" />
                             RFI
                           </Button>
                         </div>
