@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Home, MessageSquare, User } from 'lucide-react';
+import { Plus, Home, MessageSquare, User, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {

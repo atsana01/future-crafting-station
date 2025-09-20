@@ -8,11 +8,12 @@ interface VerifiedBadgeProps {
 
 const VerifiedBadge: React.FC<VerifiedBadgeProps> = ({ className = "", size = 16 }) => {
   return (
-    <CheckCircle 
-      className={`text-green-600 ${className}`} 
-      size={size}
-      title="ETEK Registered - Verified Professional Engineer"
-    />
+    <div title="ETEK Registered - Verified Professional Engineer" className="inline-flex">
+      <CheckCircle 
+        className={`text-green-600 ${className}`} 
+        size={size}
+      />
+    </div>
   );
 };
 

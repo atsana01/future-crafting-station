@@ -664,6 +664,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_type"]
       }
+      get_vendor_etek_status: {
+        Args: { vendor_user_id: string }
+        Returns: boolean
+      }
       get_vendor_for_quote_request: {
         Args: { quote_request_id_param: string }
         Returns: {

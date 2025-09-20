@@ -109,6 +109,8 @@ const ClientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
+  const [isSelecting, setIsSelecting] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
@@ -273,6 +275,35 @@ const ClientDashboard = () => {
     }
   };
 
+  const handleDeleteSelected = async () => {
+    if (selectedTickets.length === 0) return;
+    
+    try {
+      const { error } = await supabase
+        .from('quote_requests')
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .in('id', selectedTickets)
+        .eq('client_id', user?.id);
+
+      if (error) throw error;
+
+      setTickets(prevTickets => prevTickets.filter(t => !selectedTickets.includes(t.id)));
+      toast({
+        title: "Requests Deleted",
+        description: `${selectedTickets.length} quote request(s) deleted successfully`,
+      });
+
+      setSelectedTickets([]);
+      setIsSelecting(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete quote requests",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handlePortfolioClick = (ticket: Ticket) => {
     // In the future, this will redirect to the vendor's portfolio page
     toast({
@@ -335,6 +366,31 @@ const ClientDashboard = () => {
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
               </Select>
+              
+              <div className="flex gap-2">
+                {isSelecting && selectedTickets.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteSelected}
+                    className="text-destructive bg-background border border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete Selected ({selectedTickets.length})
+                  </Button>
+                )}
+                <Button
+                  variant={isSelecting ? "outline" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setIsSelecting(!isSelecting);
+                    setSelectedTickets([]);
+                  }}
+                  className={isSelecting ? "text-destructive border-destructive hover:bg-destructive/10" : ""}
+                >
+                  {isSelecting ? "Cancel" : "Select Multiple"}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -402,8 +458,25 @@ const ClientDashboard = () => {
         ) : (
           <div className="space-y-4">
             {filteredTickets.map((ticket) => (
-              <Card key={ticket.id} className="shadow-card hover:shadow-elegant transition-shadow">
+              <Card key={ticket.id} className={`shadow-card hover:shadow-elegant transition-shadow ${isSelecting && selectedTickets.includes(ticket.id) ? 'ring-2 ring-destructive' : ''}`}>
                 <CardHeader className="pb-3">
+                  {isSelecting && (
+                    <div className="flex items-center mb-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedTickets.includes(ticket.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTickets([...selectedTickets, ticket.id]);
+                          } else {
+                            setSelectedTickets(selectedTickets.filter(id => id !== ticket.id));
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-muted-foreground">Select for deletion</span>
+                    </div>
+                  )}
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
                       {/* Vendor Profile Picture */}
