@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MultiSelectDropdown from '@/components/MultiSelectDropdown';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Building, Upload, Plus, Trash2, Save, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -149,6 +149,7 @@ const BusinessInformation = () => {
 
   const handleSubmit = async (e: React.FormEvent, isDraft = false) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (!isDraft) {
       // Validate required fields for final save
@@ -402,49 +403,16 @@ const BusinessInformation = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="vendor_category">Vendor Categories *</Label>
-                  <Select 
-                    value={selectedCategories.length > 0 ? selectedCategories[0] : ''} 
-                    onValueChange={(value) => {
-                      if (value && !selectedCategories.includes(value)) {
-                        const newCategories = [...selectedCategories, value];
-                        setSelectedCategories(newCategories);
-                        setFormData(prev => ({ ...prev, vendor_category: newCategories.join(',') }));
-                      }
+                  <MultiSelectDropdown
+                    options={VENDOR_CATEGORIES}
+                    selected={selectedCategories}
+                    onSelectionChange={(newCategories) => {
+                      setSelectedCategories(newCategories);
+                      setFormData(prev => ({ ...prev, vendor_category: newCategories.join(',') }));
                     }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VENDOR_CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedCategories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedCategories.map((category) => (
-                        <div key={category} className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-sm">
-                          {category}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-4 w-4 p-0 hover:bg-destructive/10"
-                            onClick={() => {
-                              const newCategories = selectedCategories.filter(c => c !== category);
-                              setSelectedCategories(newCategories);
-                              setFormData(prev => ({ ...prev, vendor_category: newCategories.join(',') }));
-                            }}
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    placeholder="Select categories..."
+                    maxDisplay={2}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="year_established">Year Established *</Label>

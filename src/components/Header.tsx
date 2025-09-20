@@ -12,8 +12,8 @@ export const Header = () => {
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <img 
-              src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" 
-              alt="BuildEasy Logo" 
+            src="/buildeasy-logo.png" 
+            alt="BuildEasy Logo"
               className="h-32 w-auto object-contain hover:scale-105 transition-transform" 
             />
           </Link>

@@ -367,26 +367,39 @@ const ClientDashboard = () => {
                 </SelectContent>
               </Select>
               
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                {isSelecting && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const allIds = tickets.map(t => t.id);
+                      setSelectedTickets(selectedTickets.length === allIds.length ? [] : allIds);
+                    }}
+                    className="text-primary hover:text-primary/80"
+                  >
+                    {selectedTickets.length === tickets.length ? "Deselect All" : "Select All"}
+                  </Button>
+                )}
                 {isSelecting && selectedTickets.length > 0 && (
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={handleDeleteSelected}
-                    className="text-destructive bg-background border border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    className="text-white bg-destructive border-destructive hover:bg-destructive/90"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
                     Delete Selected ({selectedTickets.length})
                   </Button>
                 )}
                 <Button
-                  variant={isSelecting ? "outline" : "outline"}
+                  variant={isSelecting ? "destructive" : "outline"}
                   size="sm"
                   onClick={() => {
                     setIsSelecting(!isSelecting);
                     setSelectedTickets([]);
                   }}
-                  className={isSelecting ? "text-destructive border-destructive hover:bg-destructive/10" : ""}
+                  className={isSelecting ? "text-white bg-red-600 border-red-600 hover:bg-red-700" : ""}
                 >
                   {isSelecting ? "Cancel" : "Select Multiple"}
                 </Button>
@@ -472,9 +485,15 @@ const ClientDashboard = () => {
                             setSelectedTickets(selectedTickets.filter(id => id !== ticket.id));
                           }
                         }}
-                        className="mr-2"
+                        className="h-5 w-5 text-primary border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-primary cursor-pointer"
+                        id={`ticket-select-${ticket.id}`}
                       />
-                      <span className="text-sm text-muted-foreground">Select for deletion</span>
+                      <label 
+                        htmlFor={`ticket-select-${ticket.id}`}
+                        className="ml-3 text-sm font-medium text-gray-700 cursor-pointer select-none min-h-[44px] flex items-center"
+                      >
+                        Select for deletion
+                      </label>
                     </div>
                   )}
                   <div className="flex items-start justify-between">

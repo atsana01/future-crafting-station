@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 import DualRangeSlider from './DualRangeSlider';
 import DeliveryTimeSlider from './DeliveryTimeSlider';
+import CyprusLocationSelect from './CyprusLocationSelect';
 import { ChevronRight, Upload, CheckCircle } from 'lucide-react';
 
 interface FormData {
@@ -39,6 +40,9 @@ interface FormData {
   parkingSpaces?: number;
   undergroundParking: boolean;
   unitTypes: Array<{ bedrooms: number; bathrooms: number; sqm: number; quantity: number }>;
+  
+  // Location
+  buildLocation?: string;
   
   budget: [number, number];
   deliveryTime: number;
@@ -299,7 +303,18 @@ const EnhancedQuestionnaireForm: React.FC<EnhancedQuestionnaireFormProps> = ({ p
               </div>
             )}
 
-            {/* Inspiration Pictures Upload */}
+            {/* Location Field */}
+            <div className="space-y-2">
+              <Label className="text-base font-medium">
+                {formData.projectType === 'renovation' ? 'Build Location' : 'Desired Build Location'}
+              </Label>
+              <CyprusLocationSelect
+                value={formData.buildLocation || ''}
+                onChange={(location) => setFormData({ ...formData, buildLocation: location })}
+                placeholder="Select location in Cyprus..."
+                fieldLabel={formData.projectType === 'renovation' ? 'Build Location' : 'Desired Build Location'}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="inspiration" className="text-sm font-medium">Inspiration Pictures/Examples (Optional)</Label>
               <div 

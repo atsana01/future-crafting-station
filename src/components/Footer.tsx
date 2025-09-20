@@ -12,7 +12,7 @@ export const Footer = () => {
           <div className="space-y-3 max-w-md">
             <div className="flex items-center space-x-2">
               <Link to="/" className="hover:scale-105 transition-transform">
-                <img src="/lovable-uploads/569809aa-baff-4dfd-a37e-09697c885f6d.png" alt="BuildEasy Logo" className="h-24 w-auto object-contain cursor-pointer" />
+                <img src="/buildeasy-logo.png" alt="BuildEasy Logo" className="h-24 w-auto object-contain cursor-pointer" />
               </Link>
             </div>
             <p className="text-muted-foreground text-sm">
