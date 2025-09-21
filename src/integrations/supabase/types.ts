@@ -368,6 +368,50 @@ export type Database = {
           },
         ]
       }
+      quote_updates: {
+        Row: {
+          attachments: Json | null
+          changes: Json | null
+          created_at: string | null
+          id: string
+          message: string | null
+          quote_request_id: string
+          update_type: string
+          updated_at: string | null
+          updated_by: string
+        }
+        Insert: {
+          attachments?: Json | null
+          changes?: Json | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          quote_request_id: string
+          update_type: string
+          updated_at?: string | null
+          updated_by: string
+        }
+        Update: {
+          attachments?: Json | null
+          changes?: Json | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          quote_request_id?: string
+          update_type?: string
+          updated_at?: string | null
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_updates_quote_request_id_fkey"
+            columns: ["quote_request_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes: {
         Row: {
           assumptions_dependencies: string | null
