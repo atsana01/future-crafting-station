@@ -368,6 +368,47 @@ export type Database = {
           },
         ]
       }
+      quote_reviews: {
+        Row: {
+          created_at: string | null
+          id: string
+          quote_id: string
+          requested_changes: Json | null
+          review_notes: string | null
+          review_type: string
+          reviewer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          quote_id: string
+          requested_changes?: Json | null
+          review_notes?: string | null
+          review_type?: string
+          reviewer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          quote_id?: string
+          requested_changes?: Json | null
+          review_notes?: string | null
+          review_type?: string
+          reviewer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_reviews_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_updates: {
         Row: {
           attachments: Json | null
@@ -653,6 +694,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_client_quote_details: {
+        Args: { quote_request_id_param: string }
+        Returns: {
+          assumptions_dependencies: string
+          cost_breakdown: Json
+          created_at: string
+          duration_weeks: number
+          estimated_timeline: string
+          exclusions: string[]
+          inclusions: string[]
+          insurance_provider_used: string
+          insurance_will_be_used: boolean
+          milestones: Json
+          notes_to_client: string
+          payment_schedule: Json
+          portfolio_references: Json
+          proposed_visit_dates: Json
+          quote_id: string
+          site_visit_required: boolean
+          start_date: string
+          total_amount: number
+          validity_date: string
+          vendor_business_name: string
+          vendor_notes: string
+          vendor_rating: number
+        }[]
+      }
       get_public_vendor_directory: {
         Args: Record<PropertyKey, never>
         Returns: {

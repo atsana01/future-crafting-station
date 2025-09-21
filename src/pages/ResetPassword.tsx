@@ -17,33 +17,56 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showResendOption, setShowResendOption] = useState(false);
+  const [isValidSession, setIsValidSession] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for password reset tokens
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    const tokenHash = searchParams.get('token_hash');
-    const type = searchParams.get('type');
-    
-    if (!accessToken || !refreshToken || type !== 'recovery') {
-      setError('Invalid or expired password reset link. Please request a new password reset email.');
-      setShowResendOption(true);
-      return;
-    }
+    const handlePasswordReset = async () => {
+      try {
+        // Check for password reset tokens
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        const type = searchParams.get('type');
+        
+        // Handle different auth scenarios
+        if (type === 'recovery' && accessToken && refreshToken) {
+          console.log('Processing password reset with tokens...');
+          
+          // Set the session with the tokens from the URL
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
 
-    // Set the session with the tokens from the URL
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken
-    }).then(({ error }) => {
-      if (error) {
-        console.error('Session set error:', error);
-        setError('Failed to authenticate reset link. The link may be expired or invalid.');
+          if (error) {
+            console.error('Session set error:', error);
+            setError('Failed to authenticate reset link. The link may be expired or invalid.');
+            setShowResendOption(true);
+          } else {
+            console.log('Password reset session established successfully');
+            setIsValidSession(true);
+            // Session is valid, user can proceed to reset password
+          }
+        } else {
+          // Check if user is already authenticated (direct access)
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            setIsValidSession(true);
+          } else {
+            // No valid reset tokens found
+            setError('Invalid or expired password reset link. Please request a new password reset email.');
+            setShowResendOption(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error in password reset flow:', error);
+        setError('An error occurred while processing the reset link.');
         setShowResendOption(true);
       }
-    });
+    };
+
+    handlePasswordReset();
   }, [searchParams]);
 
   const validatePassword = (password: string): string | null => {
@@ -114,8 +137,24 @@ const ResetPassword = () => {
 
       toast.success('Password updated successfully! You are now logged in.');
       
-      // Redirect to tickets after successful password reset
-      navigate('/tickets');
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Redirect to appropriate dashboard based on user type
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .single();
+        
+        if (profile?.user_type === 'vendor') {
+          navigate('/tickets'); // Vendor dashboard
+        } else {
+          navigate('/tickets'); // Client dashboard
+        }
+      } catch {
+        navigate('/tickets'); // Default fallback
+      }
       
     } catch (error) {
       console.error('Error updating password:', error);
@@ -139,7 +178,7 @@ const ResetPassword = () => {
               Reset Your Password
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Enter your new password below
+              {isValidSession ? 'Enter your new password below' : 'Validating reset link...'}
             </CardDescription>
           </CardHeader>
           
@@ -167,7 +206,7 @@ const ResetPassword = () => {
               </Alert>
             )}
 
-            {!showResendOption && (
+            {isValidSession && !showResendOption && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="password">New Password</Label>
@@ -219,7 +258,7 @@ const ResetPassword = () => {
                       {showConfirmPassword ? (
                         <EyeOffIcon className="h-4 w-4" />
                       ) : (
-                        <EyeIcon className="h-4 w-4" />
+                        <EyeIcon className="h-4 h-4" />
                       )}
                     </Button>
                   </div>
@@ -256,6 +295,13 @@ const ResetPassword = () => {
                   {isLoading ? 'Updating Password...' : 'Update Password'}
                 </Button>
               </form>
+            )}
+
+            {!isValidSession && !showResendOption && (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Processing reset link...</p>
+              </div>
             )}
           </CardContent>
         </Card>

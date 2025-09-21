@@ -13,6 +13,9 @@ import TicketDetailsModal from '@/components/TicketDetailsModal';
 import SendMessageModal from '@/components/SendMessageModal';
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import VendorDashboard from '@/pages/VendorDashboard';
+import QuoteDetailsModal from '@/components/QuoteDetailsModal';
+import UpdateQuoteModal from '@/components/UpdateQuoteModal';
+import EnhancedChatModal from '@/components/EnhancedChatModal';
 import { 
   ArrowLeft, 
   Search, 
@@ -31,7 +34,10 @@ import {
   ExternalLink,
   User,
   Settings,
-  Plus
+  Plus,
+  Euro,
+  Edit,
+  FileText
 } from 'lucide-react';
 
 interface Ticket {
@@ -116,6 +122,28 @@ const ClientDashboard = () => {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
+  const [quoteDetailsModal, setQuoteDetailsModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+  }>({ isOpen: false, quoteRequestId: '' });
+  const [updateQuoteModal, setUpdateQuoteModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+    projectTitle: string;
+  }>({ isOpen: false, quoteRequestId: '', projectTitle: '' });
+  const [chatModal, setChatModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+    projectTitle: string;
+    clientId: string;
+    vendorId: string;
+  }>({
+    isOpen: false,
+    quoteRequestId: '',
+    projectTitle: '',
+    clientId: '',
+    vendorId: ''
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -418,7 +446,8 @@ const ClientDashboard = () => {
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
-              <div className="text-2xl font-bold text-blue-500">
+              <div className="text-2xl font-bold text-primary flex items-center justify-center gap-1">
+                <Clock className="w-5 h-5" />
                 {tickets.filter(t => t.status === 'pending').length}
               </div>
               <p className="text-sm text-muted-foreground">Pending</p>
@@ -426,7 +455,8 @@ const ClientDashboard = () => {
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
-              <div className="text-2xl font-bold text-accent">
+              <div className="text-2xl font-bold text-accent flex items-center justify-center gap-1">
+                <Euro className="w-5 h-5" />
                 {tickets.filter(t => t.status === 'quoted').length}
               </div>
               <p className="text-sm text-muted-foreground">Quoted</p>
@@ -434,7 +464,8 @@ const ClientDashboard = () => {
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
-              <div className="text-2xl font-bold text-accent">
+              <div className="text-2xl font-bold text-accent flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-5 h-5" />
                 {tickets.filter(t => t.status === 'accepted').length}
               </div>
               <p className="text-sm text-muted-foreground">Accepted</p>
@@ -475,25 +506,25 @@ const ClientDashboard = () => {
                 <CardHeader className="pb-3">
                   {isSelecting && (
                     <div className="flex items-center mb-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedTickets.includes(ticket.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedTickets([...selectedTickets, ticket.id]);
-                          } else {
-                            setSelectedTickets(selectedTickets.filter(id => id !== ticket.id));
-                          }
-                        }}
-                        className="h-5 w-5 text-primary border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-primary cursor-pointer"
-                        id={`ticket-select-${ticket.id}`}
-                      />
-                      <label 
-                        htmlFor={`ticket-select-${ticket.id}`}
-                        className="ml-3 text-sm font-medium text-gray-700 cursor-pointer select-none min-h-[44px] flex items-center"
-                      >
-                        Select for deletion
-                      </label>
+                        <input
+                          type="checkbox"
+                          checked={selectedTickets.includes(ticket.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTickets([...selectedTickets, ticket.id]);
+                            } else {
+                              setSelectedTickets(selectedTickets.filter(id => id !== ticket.id));
+                            }
+                          }}
+                          className="h-6 w-6 text-primary border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-primary cursor-pointer"
+                          id={`ticket-select-${ticket.id}`}
+                        />
+                        <label 
+                          htmlFor={`ticket-select-${ticket.id}`}
+                          className="ml-3 text-sm font-medium text-gray-700 cursor-pointer select-none min-h-[44px] flex items-center pt-4"
+                        >
+                          Select for deletion
+                        </label>
                     </div>
                   )}
                   <div className="flex items-start justify-between">
@@ -547,17 +578,17 @@ const ClientDashboard = () => {
                         </div>
                         
                         <div className="flex items-center space-x-1">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <MapPin className="w-4 h-4 bg-gradient-primary bg-clip-text text-transparent" />
                           <span className="truncate max-w-[120px]">{ticket.vendor.location}</span>
                         </div>
                         
                         <div className="flex items-center space-x-1">
-                          <DollarSign className="w-4 h-4 text-accent" />
+                          <Euro className="w-4 h-4 bg-gradient-primary bg-clip-text text-transparent" />
                           <span>{ticket.vendor.avgPrice}</span>
                         </div>
                         
                         <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4 text-primary" />
+                          <Clock className="w-4 h-4 bg-gradient-primary bg-clip-text text-transparent" />
                           <span>{ticket.vendor.deliveryTime}</span>
                         </div>
                       </div>
@@ -594,41 +625,63 @@ const ClientDashboard = () => {
                       </div>
                     )}
                     
-                    {/* Actions */}
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewDetails(ticket)}
-                        className="flex items-center gap-2 hover:bg-primary/10 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span className="hidden sm:inline">View Details</span>
-                        <span className="sm:hidden">Details</span>
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleSendMessage(ticket)}
-                        className="flex items-center gap-2 hover:bg-accent/10 transition-colors"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        <span className="hidden sm:inline">Send Message</span>
-                        <span className="sm:hidden">Message</span>
-                      </Button>
-                      {(ticket.status === 'pending' || ticket.status === 'quoted') && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDeleteRequest(ticket.id)}
-                          className="flex items-center gap-2 hover:bg-destructive/10 text-destructive hover:text-destructive transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          <span className="hidden sm:inline">Delete Request</span>
-                          <span className="sm:hidden">Delete</span>
-                        </Button>
-                      )}
-                    </div>
+                     {/* Actions */}
+                     <div className="flex flex-wrap gap-2 pt-2">
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => setChatModal({
+                           isOpen: true,
+                           quoteRequestId: ticket.id,
+                           projectTitle: ticket.vendor.name,
+                           clientId: user?.id || '',
+                           vendorId: ticket.vendor.id
+                         })}
+                         className="flex items-center gap-2 hover:bg-primary/10 transition-colors"
+                       >
+                         <MessageSquare className="w-4 h-4" />
+                         <span className="hidden sm:inline">Chat</span>
+                       </Button>
+                       
+                       {ticket.status === 'quoted' && (
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => setQuoteDetailsModal({
+                             isOpen: true,
+                             quoteRequestId: ticket.id
+                           })}
+                           className="flex items-center gap-2 hover:bg-accent/10 transition-colors"
+                         >
+                           <FileText className="w-4 h-4" />
+                           <span className="hidden sm:inline">View Quote</span>
+                         </Button>
+                       )}
+                       
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => setUpdateQuoteModal({
+                           isOpen: true,
+                           quoteRequestId: ticket.id,
+                           projectTitle: ticket.vendor.name
+                         })}
+                         className="flex items-center gap-2 hover:bg-orange/10 transition-colors"
+                       >
+                         <Edit className="w-4 h-4" />
+                         <span className="hidden sm:inline">Update Quote</span>
+                       </Button>
+                       
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => handleViewDetails(ticket)}
+                         className="flex items-center gap-2 hover:bg-primary/10 transition-colors"
+                       >
+                         <Eye className="w-4 h-4" />
+                         <span className="hidden sm:inline">Details</span>
+                       </Button>
+                     </div>
                   </div>
                 </CardContent>
               </Card>
@@ -637,18 +690,52 @@ const ClientDashboard = () => {
         )}
       </div>
 
-      {/* Modals */}
-      <TicketDetailsModal
-        ticket={selectedTicket}
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-      />
-      
-      <SendMessageModal
-        ticket={selectedTicket}
-        isOpen={isMessageModalOpen}
-        onClose={() => setIsMessageModalOpen(false)}
-      />
+        {/* Modals */}
+        <TicketDetailsModal
+          ticket={selectedTicket}
+          isOpen={isDetailsModalOpen}
+          onClose={() => setIsDetailsModalOpen(false)}
+        />
+
+        <SendMessageModal
+          ticket={selectedTicket}
+          isOpen={isMessageModalOpen}
+          onClose={() => setIsMessageModalOpen(false)}
+        />
+
+        <QuoteDetailsModal
+          isOpen={quoteDetailsModal.isOpen}
+          onClose={() => setQuoteDetailsModal({ isOpen: false, quoteRequestId: '' })}
+          quoteRequestId={quoteDetailsModal.quoteRequestId}
+          onQuoteAction={(action) => {
+            fetchTickets(); // Refresh after quote action
+          }}
+        />
+
+        <UpdateQuoteModal
+          isOpen={updateQuoteModal.isOpen}
+          onClose={() => setUpdateQuoteModal({ isOpen: false, quoteRequestId: '', projectTitle: '' })}
+          quoteRequestId={updateQuoteModal.quoteRequestId}
+          projectTitle={updateQuoteModal.projectTitle}
+          onUpdateSent={() => {
+            fetchTickets(); // Refresh after update
+          }}
+        />
+
+        <EnhancedChatModal
+          isOpen={chatModal.isOpen}
+          onClose={() => setChatModal({
+            isOpen: false,
+            quoteRequestId: '',
+            projectTitle: '',
+            clientId: '',
+            vendorId: ''
+          })}
+          quoteRequestId={chatModal.quoteRequestId}
+          projectTitle={chatModal.projectTitle}
+          clientId={chatModal.clientId}
+          vendorId={chatModal.vendorId}
+        />
       
       <ConfirmDeleteDialog
         open={deleteDialogOpen}
