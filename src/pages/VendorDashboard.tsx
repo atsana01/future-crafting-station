@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import EnhancedSendQuoteModal from '@/components/EnhancedSendQuoteModal';
-import RFIModal from '@/components/RFIModal';
+import FormalRFIModal from '@/components/FormalRFIModal';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
 
 interface QuoteRequest {
@@ -88,7 +88,9 @@ const VendorDashboard = () => {
             description,
             budget_range,
             location,
-            created_at
+            created_at,
+            timeline,
+            form_data
           )
         `)
         .eq('vendor_id', user.id)
@@ -123,6 +125,7 @@ const VendorDashboard = () => {
             description: item.projects?.description || '',
             budget_range: item.projects?.budget_range || 'Budget not specified',
             location: item.projects?.location || 'Location not specified',
+            timeline: item.projects?.timeline || (item.projects?.form_data && typeof item.projects.form_data === 'object' && 'deliveryTime' in item.projects.form_data ? `${(item.projects.form_data as any).deliveryTime} months` : 'Timeline not specified'),
             created_at: item.projects?.created_at || item.created_at
           },
           client: {
@@ -415,6 +418,12 @@ const VendorDashboard = () => {
                               <Clock className="w-4 h-4" />
                               {formatDate(quote.created_at)}
                             </span>
+                            <span className="flex items-center gap-1 text-orange-600 font-medium">
+                              <div className="flex items-center justify-center w-4 h-4 bg-orange-100 rounded-sm">
+                                <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
+                              </div>
+                              {(quote.project as any).timeline}
+                            </span>
                             {quote.project.location && (
                               <span>{quote.project.location}</span>
                             )}
@@ -476,12 +485,14 @@ const VendorDashboard = () => {
           onQuoteSent={handleQuoteSent}
         />
 
-        <RFIModal
+        <FormalRFIModal
           isOpen={rfiModal.isOpen}
           onClose={() => setRfiModal({ isOpen: false, quoteRequestId: '', projectTitle: '', clientId: '' })}
           quoteRequestId={rfiModal.quoteRequestId}
           projectTitle={rfiModal.projectTitle}
           clientId={rfiModal.clientId}
+          vendorId={user?.id}
+          isVendor={true}
         />
 
         <EnhancedChatModal

@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import NegotiateQuoteModal from './NegotiateQuoteModal';
+import QuotesArchive from './QuotesArchive';
 import { 
   Euro, 
   Calendar, 
@@ -17,14 +19,18 @@ import {
   CheckCircle2, 
   XCircle, 
   MessageSquare,
-  Star
+  Star,
+  Trash2,
+  Archive,
+  AlertCircle,
+  Eye
 } from 'lucide-react';
 
 interface QuoteDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   quoteRequestId: string;
-  onQuoteAction?: (action: 'accept' | 'decline' | 'review') => void;
+  onQuoteAction?: (action: 'accept' | 'decline' | 'review' | 'cancel') => void;
 }
 
 interface QuoteDetails {
@@ -62,6 +68,9 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [reviewNotes, setReviewNotes] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showNegotiateModal, setShowNegotiateModal] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
+  const [showPortfolioWarning, setShowPortfolioWarning] = useState(false);
 
   useEffect(() => {
     if (isOpen && quoteRequestId) {
@@ -91,11 +100,27 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
     }
   };
 
-  const handleQuoteAction = async (action: 'accept' | 'decline' | 'review') => {
+  const handleQuoteAction = async (action: 'accept' | 'decline' | 'review' | 'cancel') => {
     if (!quoteDetails) return;
 
     try {
-      if (action === 'review') {
+      if (action === 'cancel') {
+        const { error } = await supabase
+          .from('quote_requests')
+          .update({ 
+            status: 'declined',
+            deletion_reason: 'Cancelled by client',
+            deleted_at: new Date().toISOString()
+          })
+          .eq('id', quoteRequestId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Quote Cancelled',
+          description: 'The quote has been cancelled and moved to archive',
+        });
+      } else if (action === 'review') {
         if (!reviewNotes.trim()) {
           toast({
             title: 'Error',
@@ -137,7 +162,7 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
       }
 
       onQuoteAction?.(action);
-      onClose();
+      if (action !== 'cancel') onClose();
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -145,6 +170,12 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
         variant: 'destructive',
       });
     }
+  };
+
+  const handlePortfolioClick = () => {
+    // Check if vendor has portfolio for this category
+    // For now, show warning - this should be enhanced to check actual portfolio
+    setShowPortfolioWarning(true);
   };
 
   if (loading) {
@@ -285,6 +316,18 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
                 </div>
               )}
 
+              {quoteDetails.site_visit_required && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Eye className="w-4 h-4 text-blue-500" />
+                  <span>Site visit required</span>
+                  {quoteDetails.proposed_visit_dates && Array.isArray(quoteDetails.proposed_visit_dates) && quoteDetails.proposed_visit_dates.length > 0 && (
+                    <span className="text-muted-foreground">
+                      (Proposed dates: {quoteDetails.proposed_visit_dates.join(', ')})
+                    </span>
+                  )}
+                </div>
+              )}
+
               {quoteDetails.insurance_will_be_used && (
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="w-4 h-4 text-green-500" />
@@ -317,55 +360,150 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
           </div>
         </ScrollArea>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          {!showReviewForm ? (
-            <>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowReviewForm(true)}
-                className="text-orange-600 border-orange-600 hover:bg-orange-50"
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Request Review
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={() => handleQuoteAction('decline')}
-              >
-                <XCircle className="w-4 h-4 mr-2" />
-                Decline Quote
-              </Button>
-              <Button 
-                onClick={() => handleQuoteAction('accept')}
-                className="bg-gradient-primary"
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Accept Quote
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setShowReviewForm(false);
-                  setReviewNotes('');
-                }}
-              >
-                Cancel Review
-              </Button>
-              <Button 
-                onClick={() => handleQuoteAction('review')}
-                className="bg-gradient-primary"
-              >
-                Send Review Request
-              </Button>
-            </>
-          )}
+        <div className="flex justify-between pt-4 border-t">
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handlePortfolioClick}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Portfolio
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowArchive(true)}
+              className="text-gray-600 border-gray-600 hover:bg-gray-50"
+            >
+              <Archive className="w-4 h-4 mr-2" />
+              Archive
+            </Button>
+          </div>
+          <div className="flex gap-3">
+            {!showReviewForm ? (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowReviewForm(true)}
+                  className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Request Review
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowNegotiateModal(true)}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  Negotiate
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => handleQuoteAction('cancel')}
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Cancel Quote
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => handleQuoteAction('decline')}
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Decline Quote
+                </Button>
+                <Button 
+                  onClick={() => handleQuoteAction('accept')}
+                  className="bg-gradient-primary"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Accept Quote
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowReviewForm(false);
+                    setReviewNotes('');
+                  }}
+                >
+                  Cancel Review
+                </Button>
+                <Button 
+                  onClick={() => handleQuoteAction('review')}
+                  className="bg-gradient-primary"
+                >
+                  Send Review Request
+                </Button>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Modals */}
+        {quoteDetails && (
+          <NegotiateQuoteModal
+            isOpen={showNegotiateModal}
+            onClose={() => setShowNegotiateModal(false)}
+            quoteDetails={{
+              quote_id: quoteDetails.quote_id,
+              total_amount: quoteDetails.total_amount,
+              duration_weeks: quoteDetails.duration_weeks,
+              start_date: quoteDetails.start_date,
+              vendor_business_name: quoteDetails.vendor_business_name,
+              project_title: "Project" // This should come from props
+            }}
+            onNegotiate={() => {
+              onQuoteAction?.('review');
+              setShowNegotiateModal(false);
+            }}
+          />
+        )}
+
+        <QuotesArchive
+          isOpen={showArchive}
+          onClose={() => setShowArchive(false)}
+        />
+
+        {/* Portfolio Warning Dialog */}
+        <Dialog open={showPortfolioWarning} onOpenChange={setShowPortfolioWarning}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+                Portfolio Not Available
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                The vendor hasn't uploaded portfolio images for this category yet. 
+                You can request to see previous work examples through a direct message.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setShowPortfolioWarning(false)}>
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowPortfolioWarning(false);
+                    // This should open chat modal
+                    toast({
+                      title: "Chat Feature",
+                      description: "Chat functionality will be implemented here",
+                    });
+                  }}
+                  className="bg-gradient-primary"
+                >
+                  Send Message
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
