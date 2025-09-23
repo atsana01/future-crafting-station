@@ -184,7 +184,12 @@ const EnhancedChatModal: React.FC<ChatModalProps> = ({
         throw error;
       }
 
-      if (error) throw error;
+      console.log('Message sent successfully:', data); // Debug log
+      
+      toast({
+        title: 'Message sent',
+        description: 'Your message has been sent successfully.',
+      });
 
       setNewMessage('');
       setSelectedFile(null);
@@ -239,7 +244,7 @@ const EnhancedChatModal: React.FC<ChatModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl h-[600px] flex flex-col">
+      <DialogContent className="w-[85vw] max-w-[85vw] h-[85vh] max-h-[85vh] flex flex-col bg-background/95 backdrop-blur-lg border border-border/50 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />

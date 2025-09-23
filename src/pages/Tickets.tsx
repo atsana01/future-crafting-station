@@ -612,21 +612,33 @@ const ClientDashboard = () => {
                       </p>
                     </div>
                     
-                    {/* Quote Information */}
-                    {ticket.status === 'quoted' && ticket.quotedAmount && (
-                      <div className="bg-accent/10 p-4 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium text-accent">Quote Received</h4>
-                            <p className="text-2xl font-bold text-accent">{ticket.quotedAmount}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button size="sm" className="bg-gradient-primary">Accept</Button>
-                            <Button size="sm" variant="outline">Negotiate</Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                     {/* Quote Information */}
+                     {ticket.status === 'quoted' && ticket.quotedAmount && (
+                       <div className="bg-accent/10 p-4 rounded-lg">
+                         <div className="flex items-center justify-between">
+                           <div>
+                             <h4 className="font-medium text-accent">Quote Received</h4>
+                             <p className="text-2xl font-bold text-accent">{ticket.quotedAmount}</p>
+                           </div>
+                           <div className="flex gap-2">
+                             <Button 
+                               size="sm" 
+                               variant="outline"
+                               onClick={() => setQuoteDetailsModal({
+                                 isOpen: true,
+                                 quoteRequestId: ticket.id
+                               })}
+                               className="flex items-center gap-2"
+                             >
+                               <FileText className="w-4 h-4" />
+                               View Quote
+                             </Button>
+                             <Button size="sm" className="bg-gradient-primary">Accept</Button>
+                             <Button size="sm" variant="outline">Negotiate</Button>
+                           </div>
+                         </div>
+                       </div>
+                     )}
                     
                      {/* Actions */}
                      <div className="flex flex-wrap gap-2 pt-2">

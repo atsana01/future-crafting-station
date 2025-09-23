@@ -324,9 +324,34 @@ const TicketsNew = () => {
                             </div>
 
                             {ticket.quotedAmount && (
-                              <div className="flex items-center gap-1 text-sm font-medium text-green-600 mb-2">
-                                <DollarSign className="w-4 h-4" />
-                                ${ticket.quotedAmount.toLocaleString()}
+                              <div className="bg-accent/10 p-3 rounded-lg mb-2">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="text-sm font-medium text-accent">Quote Received</div>
+                                    <div className="flex items-center gap-1 text-lg font-bold text-accent">
+                                      <DollarSign className="w-5 h-5" />
+                                      ${ticket.quotedAmount.toLocaleString()}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => {
+                                        setSelectedTicket(ticket);
+                                        setShowDetailsModal(true);
+                                      }}
+                                    >
+                                      View Quote
+                                    </Button>
+                                    <Button size="sm" className="bg-gradient-primary">
+                                      Accept
+                                    </Button>
+                                    <Button size="sm" variant="outline">
+                                      Negotiate
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
                             )}
 

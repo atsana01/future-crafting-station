@@ -204,7 +204,7 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="w-[85vw] max-w-[85vw] h-[85vh] max-h-[85vh] overflow-hidden bg-background/95 backdrop-blur-lg border border-border/50 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-primary" />

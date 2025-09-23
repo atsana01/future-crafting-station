@@ -84,7 +84,7 @@ const SendMessageModal = ({ ticket, isOpen, onClose }: SendMessageModalProps) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[85vw] max-w-[85vw] h-[85vh] max-h-[85vh] overflow-hidden flex flex-col bg-background/95 backdrop-blur-lg border border-border/50 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-primary" />
