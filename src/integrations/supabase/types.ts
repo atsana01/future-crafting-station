@@ -724,14 +724,18 @@ export type Database = {
       get_public_vendor_directory: {
         Args: Record<PropertyKey, never>
         Returns: {
+          bio: string
           business_name: string
           id: string
           location: string
+          portfolio_images: Json
           rating: number
+          services_offered: Json
           specialty: string[]
           total_reviews: number
           user_id: string
           verification_status: Database["public"]["Enums"]["verification_status"]
+          years_experience: number
         }[]
       }
       get_public_vendor_profiles: {
@@ -775,6 +779,15 @@ export type Database = {
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_type"]
+      }
+      get_vendor_contact_info: {
+        Args: { vendor_user_id: string }
+        Returns: {
+          business_address: string
+          email: string
+          phone: string
+          website: string
+        }[]
       }
       get_vendor_etek_status: {
         Args: { vendor_user_id: string }

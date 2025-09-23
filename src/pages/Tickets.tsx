@@ -173,7 +173,10 @@ const ClientDashboard = () => {
 
       const [projectsResult, vendorProfilesResult] = await Promise.all([
         supabase.from('projects').select('id, title, description, service_groups').in('id', projectIds),
-        supabase.from('vendor_profiles').select('user_id, business_name, location, rating, total_reviews, verification_status, specialty').in('user_id', vendorIds)
+        supabase.rpc('get_public_vendor_directory').then(result => ({
+          data: result.data?.filter(v => vendorIds.includes(v.user_id)) || [],
+          error: result.error
+        }))
       ]);
 
       // Create lookup maps

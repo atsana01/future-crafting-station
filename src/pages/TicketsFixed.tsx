@@ -57,10 +57,8 @@ const TicketsFixed = () => {
       if (error) throw error;
 
       const vendorIds = [...new Set(quoteRequests?.map(qr => qr.vendor_id) || [])];
-      const { data: vendorProfiles } = await supabase
-        .from('vendor_profiles')
-        .select('user_id, business_name, location, rating, total_reviews, verification_status, specialty')
-        .in('user_id', vendorIds);
+      const { data: allVendors } = await supabase.rpc('get_public_vendor_directory');
+      const vendorProfiles = allVendors?.filter(v => vendorIds.includes(v.user_id)) || [];
 
       const vendorsMap = new Map(vendorProfiles?.map(v => [v.user_id, v]) || []);
 
