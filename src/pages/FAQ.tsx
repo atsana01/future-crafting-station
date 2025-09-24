@@ -14,7 +14,7 @@ const FAQ = () => {
       questions: [
         {
           question: 'How does BuildEasy work?',
-          answer: 'BuildEasy connects you with qualified professionals for your construction and renovation projects. Simply describe your project, answer a few questions, and our AI matches you with the right contractors, architects, and specialists.'
+          answer: 'BuildEasy is an intelligent platform that connects clients with verified construction professionals. Here\'s how it works: 1) Submit your project details through our smart questionnaire, 2) Our AI matches you with 3-5 qualified professionals based on location, expertise, and availability, 3) Receive detailed quotes with cost breakdowns, timelines, and portfolios, 4) Compare quotes, communicate securely through our platform, and hire your preferred professional, 5) Manage your project with integrated tools for payments, progress tracking, and communication.'
         },
         {
           question: 'Do I need to create an account to get quotes?',
@@ -26,7 +26,7 @@ const FAQ = () => {
         },
         {
           question: 'What types of projects can I submit?',
-          answer: 'We handle all types of construction and renovation projects, from small home repairs to large commercial builds, including residential houses, additions, renovations, landscaping, and more.'
+          answer: 'BuildEasy supports a comprehensive range of construction and renovation projects: Residential (new builds, extensions, renovations, kitchen/bathroom remodels), Commercial (office fit-outs, retail spaces, warehouses), Landscaping (garden design, outdoor living spaces, swimming pools), Specialized services (HVAC, electrical, plumbing, roofing), and Infrastructure projects. Our platform serves projects from €500 repairs to multi-million euro developments.'
         }
       ]
     },
@@ -83,7 +83,7 @@ const FAQ = () => {
       questions: [
         {
           question: 'How are professionals matched to my project?',
-          answer: 'Our AI analyzes your project requirements, location, timeline, and budget to match you with qualified professionals who have relevant experience and availability.'
+          answer: 'Our sophisticated AI matching system considers multiple factors: Project type and complexity, Geographic location and service radius, Budget alignment and pricing history, Professional\'s expertise and specializations, Availability and current workload, Past client reviews and ratings, Licensing and insurance status, and Response time preferences. This ensures you receive quotes from the most suitable professionals for your specific needs.'
         },
         {
           question: 'How many professionals will I be matched with?',
@@ -91,7 +91,7 @@ const FAQ = () => {
         },
         {
           question: 'Are all professionals vetted?',
-          answer: 'Yes, all professionals on our platform are verified for licensing, insurance, and have been reviewed for quality of work and reliability.'
+          answer: 'Absolutely. Our comprehensive vetting process includes: License verification through official databases, Insurance coverage confirmation (liability and worker\'s compensation), Background checks and business registration verification, Portfolio review and past work validation, Client reference checks and rating analysis, Financial stability assessment, and Ongoing performance monitoring. Only professionals who meet our strict standards can join the platform.'
         },
         {
           question: 'What if I\'m not satisfied with the matches?',
@@ -106,7 +106,7 @@ const FAQ = () => {
       questions: [
         {
           question: 'Is there a cost to use BuildEasy?',
-          answer: 'Creating an account and submitting quote requests is free for clients. We only charge a small service fee when you hire a professional through our platform.'
+          answer: 'For Clients: Creating accounts, submitting unlimited project requests, receiving quotes, and using our communication tools is completely free. We only charge a small service fee (typically 2-3%) when you successfully hire a professional. For Vendors: We offer Free, Basic (€25/month), and Premium (€100/month) plans with different commission rates and features. The platform fee decreases with higher tier subscriptions.'
         },
         {
           question: 'How do I pay professionals?',
@@ -129,11 +129,11 @@ const FAQ = () => {
       questions: [
         {
           question: 'How do I communicate with professionals?',
-          answer: 'All communication happens through our secure messaging system in your dashboard. This keeps all project discussions organized and accessible.'
+          answer: 'BuildEasy provides a comprehensive communication suite: Secure in-platform messaging with file attachments, Real-time notifications for new messages and quote updates, Video call scheduling for project discussions, Document sharing for plans, contracts, and permits, Progress photo sharing and milestone updates, and Mobile app notifications. All conversations are encrypted and stored for your project records.'
         },
         {
           question: 'Can I track project progress?',
-          answer: 'Yes, your dashboard shows project status, milestones, payments, and communication history. Professionals update progress as work is completed.'
+          answer: 'Yes! Our project management dashboard provides: Real-time progress updates with photo documentation, Milestone tracking with completion percentages, Payment schedules and transaction history, Quality control checklists and inspections, Timeline management with delay notifications, Budget tracking and change order management, and Document repository for contracts, permits, and warranties. You\'ll always know exactly where your project stands.'
         },
         {
           question: 'What if I have issues with a professional?',

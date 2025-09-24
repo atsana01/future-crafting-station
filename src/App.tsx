@@ -24,7 +24,7 @@ import Cookies from "./pages/Cookies";
 import AcceptableUse from "./pages/AcceptableUse";
 import ResetPassword from "./pages/ResetPassword";
 import QuotesHistory from "./pages/QuotesHistory";
-import PaymentBilling from "./pages/PaymentBilling";
+import VendorPaymentBilling from "./pages/VendorPaymentBilling";
 import VendorDashboard from "./pages/VendorDashboard";
 import { RoleGuard } from "./components/RoleGuard";
 
@@ -88,8 +88,8 @@ const App = () => (
                           </RoleGuard>
                         } />
                         <Route path="/payment-billing" element={
-                          <RoleGuard allowedUserTypes={['client', 'vendor']}>
-                            <PaymentBilling />
+                          <RoleGuard allowedUserTypes={['vendor']}>
+                            <VendorPaymentBilling />
                           </RoleGuard>
                         } />
                         <Route path="*" element={<NotFound />} />

@@ -232,7 +232,7 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary flex items-center justify-center gap-2">
                     <Euro className="w-6 h-6" />
-                    €{quoteDetails.total_amount.toLocaleString()}
+                    {quoteDetails.total_amount.toLocaleString()}
                   </div>
                   <p className="text-sm text-muted-foreground">Total Amount</p>
                 </div>
