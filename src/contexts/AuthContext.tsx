@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logSecurityEvent } from '@/utils/security';
 
 interface AuthContextType {
   user: User | null;
@@ -27,12 +28,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [rememberMe]);
 
   useEffect(() => {
-    // Set up auth state listener first
+    // Set up auth state listener first with security logging
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Log auth state changes for security monitoring
+        if (event === 'SIGNED_IN') {
+          setTimeout(() => {
+            logSecurityEvent('auth_state_signed_in', 'authentication');
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          setTimeout(() => {
+            logSecurityEvent('auth_state_signed_out', 'authentication');
+          }, 0);
+        } else if (event === 'TOKEN_REFRESHED') {
+          setTimeout(() => {
+            logSecurityEvent('auth_token_refreshed', 'authentication');
+          }, 0);
+        }
 
         // Handle redirect after login based on user type
         if (event === 'SIGNED_IN' && session?.user) {
@@ -72,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signOut = async () => {
+    await logSecurityEvent('user_logout', 'authentication');
     await supabase.auth.signOut();
     // Clear remember me preference on logout
     localStorage.removeItem('rememberMe');

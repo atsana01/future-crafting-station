@@ -48,17 +48,36 @@ export const logSecurityEvent = async (
   }
 };
 
-// Validate file uploads
+// Enhanced file upload validation with MIME type checking
 export const validateFileUpload = (file: File): { valid: boolean; error?: string } => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf', 'text/plain'];
   const maxSize = 5 * 1024 * 1024; // 5MB
+  
+  // Check file extension matches MIME type (basic MIME spoofing protection)
+  const extension = file.name.toLowerCase().split('.').pop();
+  const mimeToExt: Record<string, string[]> = {
+    'image/jpeg': ['jpg', 'jpeg'],
+    'image/png': ['png'],
+    'image/webp': ['webp'],
+    'application/pdf': ['pdf'],
+    'text/plain': ['txt']
+  };
   
   if (!allowedTypes.includes(file.type)) {
     return { valid: false, error: 'File type not allowed' };
   }
   
+  if (extension && mimeToExt[file.type] && !mimeToExt[file.type].includes(extension)) {
+    return { valid: false, error: 'File extension does not match MIME type' };
+  }
+  
   if (file.size > maxSize) {
     return { valid: false, error: 'File size too large (max 5MB)' };
+  }
+  
+  // Check for suspicious file names
+  if (/script|php|exe|bat|cmd|sh/i.test(file.name)) {
+    return { valid: false, error: 'Suspicious file name detected' };
   }
   
   return { valid: true };
@@ -138,3 +157,60 @@ export class RateLimiter {
 }
 
 export const authRateLimiter = new RateLimiter(5, 60000); // 5 attempts per minute
+
+// Enhanced session security
+export const validateSession = async (): Promise<{ valid: boolean; error?: string }> => {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      await logSecurityEvent('invalid_session_access', 'authentication', undefined, {
+        error: error?.message || 'No user found'
+      });
+      return { valid: false, error: 'Invalid session' };
+    }
+    
+    return { valid: true };
+  } catch (error) {
+    await logSecurityEvent('session_validation_error', 'authentication', undefined, {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    return { valid: false, error: 'Session validation failed' };
+  }
+};
+
+// Secure password validation
+export const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+  
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+  
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+  
+  // Check for common weak passwords
+  const weakPasswords = ['password', '12345678', 'qwerty123', 'admin123'];
+  if (weakPasswords.some(weak => password.toLowerCase().includes(weak.toLowerCase()))) {
+    errors.push('Password contains common weak patterns');
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+};
