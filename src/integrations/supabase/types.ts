@@ -47,6 +47,36 @@ export type Database = {
         }
         Relationships: []
       }
+      be: {
+        Row: {
+          attrs: Json | null
+          business_type: string | null
+          country: string | null
+          created: string | null
+          email: string | null
+          id: string | null
+          type: string | null
+        }
+        Insert: {
+          attrs?: Json | null
+          business_type?: string | null
+          country?: string | null
+          created?: string | null
+          email?: string | null
+          id?: string | null
+          type?: string | null
+        }
+        Update: {
+          attrs?: Json | null
+          business_type?: string | null
+          country?: string | null
+          created?: string | null
+          email?: string | null
+          id?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           file_url: string | null
