@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { Sparkles, Home, Users, Zap, ChevronRight } from 'lucide-react';
 import { getRandomExamples } from '@/data/projectExamples';
 import { TypingAnimation } from '@/components/TypingAnimation';
+import { formatBudgetRange, formatTimeline, formatLocation } from '@/utils/formatters';
 import HowItWorks from '@/components/HowItWorks';
 const Index = () => {
   const navigate = useNavigate();
@@ -78,12 +79,20 @@ const Index = () => {
       let projectId = projectData.id;
       
       if (!projectId) {
+        // Format budget range from form data
+        const budgetRange = formatBudgetRange(projectData.formData?.budget);
+        const timeline = formatTimeline(projectData.formData?.deliveryTime);
+        const location = formatLocation(projectData.formData?.buildLocation);
+
         const { data: project, error: projectError } = await supabase
           .from('projects')
           .insert({
             client_id: user.id,
             title: projectData.description.substring(0, 100),
             description: projectData.description,
+            budget_range: budgetRange,
+            timeline: timeline,
+            location: location,
             service_groups: projectData.serviceGroups,
             form_data: projectData.formData,
             status: 'active'

@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import EnhancedSendQuoteModal from '@/components/EnhancedSendQuoteModal';
 import FormalRFIModal from '@/components/FormalRFIModal';
+import { formatClientName } from '@/utils/formatters';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
 
 interface QuoteRequest {
@@ -158,14 +159,7 @@ const VendorDashboard = () => {
     }
   };
 
-  // Helper function to format client name for vendor display
-  const formatClientName = (fullName: string) => {
-    const names = fullName.trim().split(' ');
-    if (names.length === 1) return names[0];
-    const firstName = names[0];
-    const lastNameInitial = names[names.length - 1].charAt(0);
-    return `${firstName} ${lastNameInitial}.`;
-  };
+  // Helper function removed - now using utility from formatters
 
   // Check if vendor is ETEK registered
   const isETEKRegistered = (vendorId: string) => {

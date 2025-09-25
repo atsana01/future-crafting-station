@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import NegotiateQuoteModal from './NegotiateQuoteModal';
 import QuotesArchive from './QuotesArchive';
+import InvoiceModal from './InvoiceModal';
 import { 
   Euro, 
   Calendar, 
@@ -71,6 +72,7 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
   const [showNegotiateModal, setShowNegotiateModal] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [showPortfolioWarning, setShowPortfolioWarning] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   useEffect(() => {
     if (isOpen && quoteRequestId) {
@@ -155,10 +157,19 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
 
         if (error) throw error;
 
-        toast({
-          title: action === 'accept' ? 'Quote Accepted' : 'Quote Declined',
-          description: `You have ${action === 'accept' ? 'accepted' : 'declined'} this quote`,
-        });
+        if (action === 'accept') {
+          toast({
+            title: 'Quote Accepted',
+            description: 'Creating invoice for digital signature and payment...',
+          });
+          // Open invoice modal for e-signature process
+          setShowInvoiceModal(true);
+        } else {
+          toast({
+            title: 'Quote Declined',
+            description: 'You have declined this quote',
+          });
+        }
       }
 
       onQuoteAction?.(action);
@@ -467,6 +478,16 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
         <QuotesArchive
           isOpen={showArchive}
           onClose={() => setShowArchive(false)}
+        />
+
+        <InvoiceModal
+          isOpen={showInvoiceModal}
+          onClose={() => setShowInvoiceModal(false)}
+          quoteRequestId={quoteRequestId}
+          onInvoiceCreated={() => {
+            // Refresh quote details or handle post-invoice creation
+            fetchQuoteDetails();
+          }}
         />
 
         {/* Portfolio Warning Dialog */}

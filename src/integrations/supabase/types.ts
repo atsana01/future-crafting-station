@@ -77,6 +77,69 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          client_id: string
+          client_signature_url: string | null
+          client_signed_at: string | null
+          created_at: string
+          id: string
+          invoice_number: string
+          paid_at: string | null
+          payment_intent_id: string | null
+          quote_id: string
+          service_fee_amount: number
+          service_fee_percentage: number
+          status: string
+          total_amount: number
+          updated_at: string
+          vendor_id: string
+          vendor_payout_amount: number
+          vendor_signature_url: string | null
+          vendor_signed_at: string | null
+        }
+        Insert: {
+          client_id: string
+          client_signature_url?: string | null
+          client_signed_at?: string | null
+          created_at?: string
+          id?: string
+          invoice_number: string
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          quote_id: string
+          service_fee_amount: number
+          service_fee_percentage?: number
+          status?: string
+          total_amount: number
+          updated_at?: string
+          vendor_id: string
+          vendor_payout_amount: number
+          vendor_signature_url?: string | null
+          vendor_signed_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_signature_url?: string | null
+          client_signed_at?: string | null
+          created_at?: string
+          id?: string
+          invoice_number?: string
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          quote_id?: string
+          service_fee_amount?: number
+          service_fee_percentage?: number
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          vendor_id?: string
+          vendor_payout_amount?: number
+          vendor_signature_url?: string | null
+          vendor_signed_at?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           file_url: string | null
@@ -719,11 +782,48 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          monthly_fee: number
+          quotes_per_month: number
+          service_fee_percentage: number
+          tier_name: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monthly_fee?: number
+          quotes_per_month?: number
+          service_fee_percentage?: number
+          tier_name?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monthly_fee?: number
+          quotes_per_month?: number
+          service_fee_percentage?: number
+          tier_name?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      create_invoice_from_quote: {
+        Args: { quote_request_id_param: string }
+        Returns: string
+      }
       get_client_quote_details: {
         Args: { quote_request_id_param: string }
         Returns: {
@@ -839,6 +939,10 @@ export type Database = {
           user_id: string
           years_experience: number
         }[]
+      }
+      get_vendor_service_fee: {
+        Args: { vendor_user_id: string }
+        Returns: number
       }
       log_security_event: {
         Args: {

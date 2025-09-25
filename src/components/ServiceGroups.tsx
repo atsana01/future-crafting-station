@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuoteForm } from '@/contexts/QuoteFormContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { formatBudgetRange, formatTimeline, formatLocation } from '@/utils/formatters';
 import { Building2, Users, Star, MapPin, CheckCircle2, Clock, DollarSign } from 'lucide-react';
 
 interface Vendor {
@@ -147,12 +148,20 @@ const ServiceGroups: React.FC<ServiceGroupsProps> = ({ serviceGroups, onVendorSe
     setIsSubmitting(true);
     
     try {
+      // Format budget range from form data
+      const budgetRange = formatBudgetRange(formData?.budget);
+      const timeline = formatTimeline(formData?.deliveryTime);
+      const location = formatLocation(formData?.buildLocation);
+
       // First create the project in the database
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .insert({
           title: projectDescription.substring(0, 100) || 'Project Request',
           description: projectDescription,
+          budget_range: budgetRange,
+          timeline: timeline,
+          location: location,
           form_data: formData,
           service_groups: serviceGroups,
           client_id: user.id,

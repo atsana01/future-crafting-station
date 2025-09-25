@@ -19,15 +19,63 @@ import {
   Percent
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 const VendorPaymentBilling = () => {
-  const [currentPlan, setCurrentPlan] = useState('free');
+  const [currentTier, setCurrentTier] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [usage, setUsage] = useState({
     quotesThisMonth: 15,
     messagesThisMonth: 45,
     projectsCompleted: 3
   });
+
+  useEffect(() => {
+    fetchVendorTier();
+  }, []);
+
+  const fetchVendorTier = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      const { data: tier, error } = await supabase
+        .from('vendor_tiers')
+        .select('*')
+        .eq('vendor_id', user.user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching vendor tier:', error);
+        return;
+      }
+
+      if (!tier) {
+        // Create default free tier
+        const { data: newTier, error: insertError } = await supabase
+          .from('vendor_tiers')
+          .insert({
+            vendor_id: user.user.id,
+            tier_name: 'free',
+            service_fee_percentage: 2.0,
+            monthly_fee: 0,
+            quotes_per_month: 10
+          })
+          .select()
+          .single();
+
+        if (!insertError) {
+          setCurrentTier(newTier);
+        }
+      } else {
+        setCurrentTier(tier);
+      }
+    } catch (error) {
+      console.error('Error in fetchVendorTier:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const plans = [
     {
@@ -101,39 +149,62 @@ const VendorPaymentBilling = () => {
   ];
 
   const getCurrentPlanDetails = () => {
-    return plans.find(plan => plan.id === currentPlan) || plans[0];
+    if (!currentTier) return plans[0];
+    return plans.find(plan => plan.id === currentTier.tier_name) || plans[0];
   };
 
   const handleUpgrade = async (planId: string) => {
     const plan = plans.find(p => p.id === planId);
-    if (!plan || plan.price === 0) return;
+    if (!plan) return;
 
     try {
-      // Create Stripe payment link for subscription
-      const response = await fetch('/api/create-subscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          planId,
-          priceAmount: plan.price * 100, // Convert to cents
-          currency: 'eur'
-        })
-      });
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
 
-      if (response.ok) {
-        const { paymentUrl } = await response.json();
-        window.open(paymentUrl, '_blank');
+      if (plan.price === 0) {
+        // Downgrade to free tier
+        const { error } = await supabase
+          .from('vendor_tiers')
+          .upsert({
+            vendor_id: user.user.id,
+            tier_name: 'free',
+            service_fee_percentage: 2.0,
+            monthly_fee: 0,
+            quotes_per_month: 10
+          });
+
+        if (error) throw error;
+        
+        await fetchVendorTier();
+        toast({
+          title: 'Plan Updated',
+          description: 'Successfully downgraded to Free plan',
+        });
       } else {
-        throw new Error('Failed to create payment link');
+        // For paid plans, integrate with Stripe (placeholder for now)
+        toast({
+          title: 'Feature Coming Soon',
+          description: 'Stripe integration for paid plans will be available shortly',
+        });
       }
     } catch (error) {
-      toast.error('Failed to initiate payment. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to update plan. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
   const currentPlanDetails = getCurrentPlanDetails();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -232,7 +303,7 @@ const VendorPaymentBilling = () => {
               className={`relative transition-all duration-300 hover:shadow-xl ${
                 plan.id === 'premium' 
                   ? 'border-2 border-primary shadow-lg transform scale-105' 
-                  : plan.id === currentPlan 
+                  : plan.id === currentTier?.tier_name 
                     ? 'border-2 border-primary/50 bg-primary/5'
                     : 'border hover:border-primary/30'
               }`}
@@ -282,16 +353,16 @@ const VendorPaymentBilling = () => {
 
                 <Button 
                   className={`w-full ${
-                    plan.id === currentPlan 
+                    plan.id === currentTier?.tier_name 
                       ? 'bg-muted text-muted-foreground cursor-not-allowed'
                       : plan.id === 'premium'
                         ? 'bg-gradient-primary hover:opacity-90'
                         : ''
                   }`}
-                  disabled={plan.id === currentPlan}
+                  disabled={plan.id === currentTier?.tier_name}
                   onClick={() => handleUpgrade(plan.id)}
                 >
-                  {plan.id === currentPlan 
+                  {plan.id === currentTier?.tier_name 
                     ? 'Current Plan'
                     : plan.price === 0
                       ? 'Downgrade to Free'
