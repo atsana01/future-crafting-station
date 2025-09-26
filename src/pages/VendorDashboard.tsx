@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import EnhancedSendQuoteModal from '@/components/EnhancedSendQuoteModal';
 import FormalRFIModal from '@/components/FormalRFIModal';
+import InvoiceModal from '@/components/InvoiceModal';
 import { formatClientName } from '@/utils/formatters';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
 
@@ -70,6 +71,14 @@ const VendorDashboard = () => {
     projectTitle: '',
     clientId: '',
     vendorId: ''
+  });
+
+  const [invoiceModal, setInvoiceModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+  }>({
+    isOpen: false,
+    quoteRequestId: ''
   });
 
   useEffect(() => {
@@ -452,6 +461,17 @@ const VendorDashboard = () => {
                               Update Quote
                             </Button>
                           )}
+                          {quote.status === 'accepted' && (
+                            <Button 
+                              size="sm" 
+                              variant="modern"
+                              onClick={() => setInvoiceModal({ isOpen: true, quoteRequestId: quote.id })}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <Euro className="w-4 h-4 mr-1" />
+                              Invoice
+                            </Button>
+                          )}
                           <Button 
                             variant="modern" 
                             size="sm"
@@ -496,6 +516,13 @@ const VendorDashboard = () => {
           projectTitle={chatModal.projectTitle}
           clientId={chatModal.clientId}
           vendorId={chatModal.vendorId}
+        />
+
+        <InvoiceModal
+          isOpen={invoiceModal.isOpen}
+          onClose={() => setInvoiceModal({ isOpen: false, quoteRequestId: '' })}
+          quoteRequestId={invoiceModal.quoteRequestId}
+          onInvoiceCreated={() => fetchQuoteRequests()}
         />
       </div>
     </div>

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { 
@@ -54,6 +56,14 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
   const [userRole, setUserRole] = useState<string | null>(null);
 
+  const [signModal, setSignModal] = useState<{
+    isOpen: boolean;
+    userRole: string;
+    requiredName: string;
+  }>({ isOpen: false, userRole: '', requiredName: '' });
+
+  const [signatureName, setSignatureName] = useState('');
+
   useEffect(() => {
     if (isOpen && quoteRequestId) {
       fetchOrCreateInvoice();
@@ -65,6 +75,42 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       getCurrentUserRole().then(setUserRole);
     }
   }, [invoice]);
+
+  useEffect(() => {
+    if (signModal.isOpen && userRole && invoice) {
+      loadRequiredName();
+    }
+  }, [signModal.isOpen, userRole, invoice]);
+
+  const loadRequiredName = async () => {
+    if (!invoice || !userRole) return;
+
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      let requiredName = '';
+      if (user.user.id === invoice.client_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', user.user.id)
+          .single();
+        requiredName = profile?.full_name || '';
+      } else if (user.user.id === invoice.vendor_id) {
+        const { data: vendorProfile } = await supabase
+          .from('vendor_profiles')
+          .select('business_name')
+          .eq('user_id', user.user.id)
+          .single();
+        requiredName = vendorProfile?.business_name || '';
+      }
+
+      setSignModal(prev => ({ ...prev, requiredName }));
+    } catch (error) {
+      console.error('Error loading required name:', error);
+    }
+  };
 
   const fetchOrCreateInvoice = async () => {
     setLoading(true);
@@ -115,11 +161,44 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
   const handleSign = async () => {
     if (!invoice) return;
+    setSignModal({ isOpen: true, userRole: userRole || '', requiredName: '' });
+  };
+
+  const processSignature = async () => {
+    if (!invoice || !signatureName.trim()) return;
 
     setSigning(true);
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
+
+      // Get user's profile or vendor profile to validate name
+      let requiredName = '';
+      if (user.user.id === invoice.client_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', user.user.id)
+          .single();
+        requiredName = profile?.full_name || '';
+      } else if (user.user.id === invoice.vendor_id) {
+        const { data: vendorProfile } = await supabase
+          .from('vendor_profiles')
+          .select('business_name')
+          .eq('user_id', user.user.id)
+          .single();
+        requiredName = vendorProfile?.business_name || '';
+      }
+
+      if (signatureName.trim().toLowerCase() !== signModal.requiredName.toLowerCase()) {
+        toast({
+          title: 'Signature Name Mismatch',
+          description: `Please enter exactly: ${signModal.requiredName}`,
+          variant: 'destructive',
+        });
+        setSigning(false);
+        return;
+      }
 
       const signatureUrl = `signature-${user.user.id}-${Date.now()}`;
       const now = new Date().toISOString();
@@ -148,6 +227,9 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
         title: 'Signed Successfully',
         description: 'Your digital signature has been recorded',
       });
+
+      setSignModal({ isOpen: false, userRole: '', requiredName: '' });
+      setSignatureName('');
 
       // Check if both parties have signed, then proceed to payment
       const bothSigned = (updateData.client_signed_at || invoice.client_signed_at) && 
@@ -423,6 +505,54 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
             </Button>
           )}
         </div>
+
+        {/* Signature Modal */}
+        <Dialog open={signModal.isOpen} onOpenChange={() => setSignModal({ isOpen: false, userRole: '', requiredName: '' })}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Digital Signature Required</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                To complete the digital signature, please type your {userRole === 'client' ? 'full name' : 'business name'} exactly as it appears in your BuildEasy account:
+              </div>
+              <div className="p-3 bg-muted rounded-md">
+                <Label className="text-sm font-medium">Required Name:</Label>
+                <div className="font-mono text-sm mt-1">
+                  {signModal.requiredName || 'Loading...'}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="signatureName">Type your name below:</Label>
+                <Input
+                  id="signatureName"
+                  value={signatureName}
+                  onChange={(e) => setSignatureName(e.target.value)}
+                  placeholder="Enter your name exactly"
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSignModal({ isOpen: false, userRole: '', requiredName: '' });
+                    setSignatureName('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={processSignature}
+                  disabled={signing || !signatureName.trim()}
+                  className="bg-gradient-primary"
+                >
+                  {signing ? 'Signing...' : 'Sign'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
