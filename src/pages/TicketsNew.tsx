@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Star, MapPin, Clock, DollarSign, MessageSquare, Trash2, Phone, Mail, Building } from 'lucide-react';
+import { Star, MapPin, Clock, DollarSign, MessageSquare, Trash2, Phone, Mail, Building, FileEdit, CheckSquare, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import SendMessageModal from '@/components/SendMessageModal';
 import TicketDetailsModal from '@/components/TicketDetailsModal';
+import QuoteDetailsModal from '@/components/QuoteDetailsModal';
+import InvoiceModal from '@/components/InvoiceModal';
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog';
 import { ProjectTabsFixed as ProjectTabs } from '@/components/ProjectTabsFixed';
 
@@ -44,6 +46,8 @@ const TicketsNew = () => {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showQuoteDetailsModal, setShowQuoteDetailsModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedTicketForDelete, setSelectedTicketForDelete] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -243,30 +247,42 @@ const TicketsNew = () => {
               <div className="grid grid-cols-4 gap-4">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold">{tickets.length}</div>
-                    <div className="text-sm text-muted-foreground">Total Quotes</div>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <FileEdit className="w-5 h-5 text-muted-foreground" />
+                      <div className="text-2xl font-bold text-muted-foreground">{tickets.length}</div>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Total Tickets</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {tickets.filter(t => t.status === 'pending').length}
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Clock className="w-5 h-5 text-muted-foreground" />
+                      <div className="text-2xl font-bold text-muted-foreground">
+                        {tickets.filter(t => t.status === 'pending').length}
+                      </div>
                     </div>
                     <div className="text-sm text-muted-foreground">Pending</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {tickets.filter(t => t.status === 'quoted').length}
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <CheckSquare className="w-5 h-5 text-muted-foreground" />
+                      <div className="text-2xl font-bold text-muted-foreground">
+                        {tickets.filter(t => t.status === 'quoted').length}
+                      </div>
                     </div>
                     <div className="text-sm text-muted-foreground">Quoted</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {tickets.filter(t => t.status === 'accepted').length}
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <CheckCircle2 className="w-5 h-5 text-muted-foreground" />
+                      <div className="text-2xl font-bold text-muted-foreground">
+                        {tickets.filter(t => t.status === 'accepted').length}
+                      </div>
                     </div>
                     <div className="text-sm text-muted-foreground">Accepted</div>
                   </CardContent>
@@ -334,20 +350,27 @@ const TicketsNew = () => {
                                     </div>
                                   </div>
                                   <div className="flex gap-2">
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      onClick={() => {
-                                        setSelectedTicket(ticket);
-                                        setShowDetailsModal(true);
-                                      }}
-                                    >
-                                      View Quote
-                                    </Button>
-                                    <Button size="sm" className="bg-gradient-primary">
-                                      Accept
-                                    </Button>
-                                    <Button size="sm" variant="outline">
+                                     <Button 
+                                       size="sm" 
+                                       variant="outline"
+                                       onClick={() => {
+                                         setSelectedTicket(ticket);
+                                         setShowQuoteDetailsModal(true);
+                                       }}
+                                     >
+                                       View Quote
+                                     </Button>
+                                     <Button 
+                                       size="sm" 
+                                       className="bg-gradient-primary"
+                                       onClick={() => {
+                                         setSelectedTicket(ticket);
+                                         setShowQuoteDetailsModal(true);
+                                       }}
+                                     >
+                                       Accept
+                                     </Button>
+                                     <Button size="sm" variant="outline">
                                       Negotiate
                                     </Button>
                                   </div>
@@ -412,6 +435,34 @@ const TicketsNew = () => {
               onClose={() => {
                 setShowDetailsModal(false);
                 setSelectedTicket(null);
+              }}
+            />
+            <QuoteDetailsModal
+              isOpen={showQuoteDetailsModal}
+              onClose={() => {
+                setShowQuoteDetailsModal(false);
+                setSelectedTicket(null);
+              }}
+              quoteRequestId={selectedTicket.id}
+              onQuoteAction={(action) => {
+                if (action === 'accept') {
+                  setShowInvoiceModal(true);
+                }
+                // Refresh tickets after any action
+                if (activeProjectId) {
+                  fetchTicketsForProject(activeProjectId);
+                }
+              }}
+            />
+            <InvoiceModal
+              isOpen={showInvoiceModal}
+              onClose={() => setShowInvoiceModal(false)}
+              quoteRequestId={selectedTicket.id}
+              onInvoiceCreated={() => {
+                // Refresh tickets after invoice creation
+                if (activeProjectId) {
+                  fetchTicketsForProject(activeProjectId);
+                }
               }}
             />
             <SendMessageModal

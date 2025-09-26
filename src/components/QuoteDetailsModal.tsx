@@ -73,6 +73,7 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
   const [showArchive, setShowArchive] = useState(false);
   const [showPortfolioWarning, setShowPortfolioWarning] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [isQuoteAccepted, setIsQuoteAccepted] = useState(false);
 
   useEffect(() => {
     if (isOpen && quoteRequestId) {
@@ -90,6 +91,17 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
       if (error) throw error;
       if (data && data.length > 0) {
         setQuoteDetails(data[0]);
+      }
+
+      // Check if quote is accepted
+      const { data: quoteRequestData } = await supabase
+        .from('quote_requests')
+        .select('status')
+        .eq('id', quoteRequestId)
+        .single();
+      
+      if (quoteRequestData?.status === 'accepted') {
+        setIsQuoteAccepted(true);
       }
     } catch (error: any) {
       toast({
@@ -162,6 +174,7 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
             title: 'Quote Accepted',
             description: 'Creating invoice for digital signature and payment...',
           });
+          setIsQuoteAccepted(true);
           // Open invoice modal for e-signature process
           setShowInvoiceModal(true);
         } else {
@@ -391,9 +404,19 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
               <Archive className="w-4 h-4 mr-2" />
               Archive
             </Button>
+            {isQuoteAccepted && (
+              <Button 
+                variant="outline" 
+                onClick={() => setShowInvoiceModal(true)}
+                className="text-green-600 border-green-600 hover:bg-green-50"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                View Invoice
+              </Button>
+            )}
           </div>
           <div className="flex gap-3">
-            {!showReviewForm ? (
+            {!isQuoteAccepted && !showReviewForm ? (
               <>
                 <Button 
                   variant="outline" 
@@ -433,6 +456,11 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
                   Accept Quote
                 </Button>
               </>
+            ) : isQuoteAccepted ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="font-medium">Quote Accepted - Invoice Available</span>
+              </div>
             ) : (
               <>
                 <Button 
