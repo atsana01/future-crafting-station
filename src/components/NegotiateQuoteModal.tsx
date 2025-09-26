@@ -22,6 +22,7 @@ interface NegotiateQuoteModalProps {
     quote_id: string;
     total_amount: number;
     duration_weeks: number;
+    estimated_timeline?: string;
     start_date: string;
     vendor_business_name: string;
     project_title: string;
@@ -108,7 +109,7 @@ const NegotiateQuoteModal: React.FC<NegotiateQuoteModalProps> = ({
                 <div className="text-center">
                   <div className="text-lg font-semibold flex items-center justify-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {quoteDetails.duration_weeks} weeks
+                    {quoteDetails.estimated_timeline || `${quoteDetails.duration_weeks} weeks`}
                   </div>
                   <p className="text-sm text-muted-foreground">Duration</p>
                 </div>

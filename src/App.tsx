@@ -30,6 +30,18 @@ import { RoleGuard } from "./components/RoleGuard";
 
 const queryClient = new QueryClient();
 
+// Component for vendor redirect logic
+const VendorRouteHandler = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <RoleGuard 
+      allowedUserTypes={['client']} 
+      fallbackRoute="/vendor-dashboard"
+    >
+      {children}
+    </RoleGuard>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ErrorBoundary>
@@ -47,7 +59,11 @@ const App = () => (
               <EmailConfirmationHandler />
               <div className="min-h-screen flex flex-col">
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={
+                  <VendorRouteHandler>
+                    <Index />
+                  </VendorRouteHandler>
+                } />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/*" element={
@@ -78,7 +94,7 @@ const App = () => (
                           </RoleGuard>
                         } />
                         <Route path="/tickets" element={
-                          <RoleGuard allowedUserTypes={['client', 'vendor']}>
+                          <RoleGuard allowedUserTypes={['client']}>
                             <Tickets />
                           </RoleGuard>
                         } />

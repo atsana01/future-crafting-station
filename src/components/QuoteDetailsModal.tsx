@@ -263,7 +263,7 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
                 <div className="text-center">
                   <div className="text-xl font-semibold flex items-center justify-center gap-2">
                     <Clock className="w-5 h-5" />
-                    {quoteDetails.duration_weeks} weeks
+                    {quoteDetails.estimated_timeline || `${quoteDetails.duration_weeks} weeks`}
                   </div>
                   <p className="text-sm text-muted-foreground">Duration</p>
                 </div>

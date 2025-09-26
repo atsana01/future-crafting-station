@@ -16,6 +16,8 @@ import VendorDashboard from '@/pages/VendorDashboard';
 import QuoteDetailsModal from '@/components/QuoteDetailsModal';
 import UpdateQuoteModal from '@/components/UpdateQuoteModal';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
+import NegotiateQuoteModal from '@/components/NegotiateQuoteModal';
+import InvoiceModal from '@/components/InvoiceModal';
 import { 
   ArrowLeft, 
   Search, 
@@ -144,6 +146,14 @@ const ClientDashboard = () => {
     clientId: '',
     vendorId: ''
   });
+  const [negotiateModal, setNegotiateModal] = useState<{
+    isOpen: boolean;
+    quoteDetails: any;
+  }>({ isOpen: false, quoteDetails: null });
+  const [invoiceModal, setInvoiceModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+  }>({ isOpen: false, quoteRequestId: '' });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -330,6 +340,79 @@ const ClientDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to delete quote requests",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAcceptQuote = async (ticketId: string) => {
+    try {
+      const { error } = await supabase
+        .from('quote_requests')
+        .update({ status: 'accepted' })
+        .eq('id', ticketId)
+        .eq('client_id', user?.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setTickets(prevTickets => 
+        prevTickets.map(t => 
+          t.id === ticketId ? { ...t, status: 'accepted' as const } : t
+        )
+      );
+
+      toast({
+        title: "Quote Accepted",
+        description: "Creating invoice for digital signature and payment...",
+      });
+
+      // Show invoice modal
+      setInvoiceModal({
+        isOpen: true,
+        quoteRequestId: ticketId
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to accept quote",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleNegotiateQuote = async (ticketId: string) => {
+    try {
+      // First fetch the quote details for the negotiate modal
+      const { data: quoteData, error } = await supabase.rpc('get_client_quote_details', {
+        quote_request_id_param: ticketId
+      });
+
+      if (error) throw error;
+
+      if (quoteData && quoteData.length > 0) {
+        const quote = quoteData[0];
+        setNegotiateModal({
+          isOpen: true,
+          quoteDetails: {
+            quote_id: quote.quote_id,
+            total_amount: quote.total_amount,
+            duration_weeks: quote.duration_weeks,
+            estimated_timeline: quote.estimated_timeline,
+            start_date: quote.start_date,
+            vendor_business_name: quote.vendor_business_name,
+            project_title: `Project ${ticketId.slice(-8)}`
+          }
+        });
+      } else {
+        throw new Error("Quote details not found");
+      }
+
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to load quote details for negotiation",
         variant: "destructive",
       });
     }
@@ -633,8 +716,20 @@ const ClientDashboard = () => {
                                <FileText className="w-4 h-4" />
                                View Quote
                              </Button>
-                             <Button size="sm" className="bg-gradient-primary">Accept</Button>
-                             <Button size="sm" variant="outline">Negotiate</Button>
+                              <Button 
+                                size="sm" 
+                                className="bg-gradient-primary"
+                                onClick={() => handleAcceptQuote(ticket.id)}
+                              >
+                                Accept
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleNegotiateQuote(ticket.id)}
+                              >
+                                Negotiate
+                              </Button>
                            </div>
                          </div>
                        </div>
@@ -671,9 +766,24 @@ const ClientDashboard = () => {
                            <FileText className="w-4 h-4" />
                            <span className="hidden sm:inline">View Quote</span>
                          </Button>
-                       )}
-                       
-                       <Button 
+                        )}
+                        
+                        {ticket.status === 'accepted' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setInvoiceModal({
+                              isOpen: true,
+                              quoteRequestId: ticket.id
+                            })}
+                            className="flex items-center gap-2 hover:bg-green-50 transition-colors border-green-200 text-green-700"
+                          >
+                            <FileText className="w-4 h-4" />
+                            <span className="hidden sm:inline">Invoice</span>
+                          </Button>
+                        )}
+                        
+                        <Button
                          variant="outline" 
                          size="sm"
                          onClick={() => setUpdateQuoteModal({
@@ -750,6 +860,25 @@ const ClientDashboard = () => {
           projectTitle={chatModal.projectTitle}
           clientId={chatModal.clientId}
           vendorId={chatModal.vendorId}
+        />
+      
+        {negotiateModal.isOpen && negotiateModal.quoteDetails && (
+          <NegotiateQuoteModal
+            isOpen={negotiateModal.isOpen}
+            onClose={() => setNegotiateModal({ isOpen: false, quoteDetails: null })}
+            quoteDetails={negotiateModal.quoteDetails}
+            onNegotiate={() => {
+              setNegotiateModal({ isOpen: false, quoteDetails: null });
+              fetchTickets(); // Refresh tickets
+            }}
+          />
+        )}
+
+        <InvoiceModal
+          isOpen={invoiceModal.isOpen}
+          onClose={() => setInvoiceModal({ isOpen: false, quoteRequestId: '' })}
+          quoteRequestId={invoiceModal.quoteRequestId}
+          onInvoiceCreated={() => fetchTickets()}
         />
       
       <ConfirmDeleteDialog
