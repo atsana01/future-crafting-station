@@ -47,36 +47,6 @@ export type Database = {
         }
         Relationships: []
       }
-      be: {
-        Row: {
-          attrs: Json | null
-          business_type: string | null
-          country: string | null
-          created: string | null
-          email: string | null
-          id: string | null
-          type: string | null
-        }
-        Insert: {
-          attrs?: Json | null
-          business_type?: string | null
-          country?: string | null
-          created?: string | null
-          email?: string | null
-          id?: string | null
-          type?: string | null
-        }
-        Update: {
-          attrs?: Json | null
-          business_type?: string | null
-          country?: string | null
-          created?: string | null
-          email?: string | null
-          id?: string | null
-          type?: string | null
-        }
-        Relationships: []
-      }
       invoices: {
         Row: {
           client_id: string
@@ -943,6 +913,10 @@ export type Database = {
       get_vendor_service_fee: {
         Args: { vendor_user_id: string }
         Returns: number
+      }
+      is_security_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       log_security_event: {
         Args: {
