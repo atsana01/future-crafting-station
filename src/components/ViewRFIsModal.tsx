@@ -47,12 +47,38 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
   const [rfis, setRfis] = useState<RFIData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRFI, setSelectedRFI] = useState<RFIData | null>(null);
+  const [participants, setParticipants] = useState<{ client_id: string; vendor_id: string } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState<boolean>(false);
+  const [responseDraft, setResponseDraft] = useState<{ overall: string; items: Record<string, string> }>({ overall: '', items: {} });
 
   useEffect(() => {
     if (isOpen && quoteRequestId) {
       fetchRFIs();
+      fetchParticipants();
     }
   }, [isOpen, quoteRequestId]);
+
+  const fetchParticipants = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+      
+      const { data: quoteRequest } = await supabase
+        .from('quote_requests')
+        .select('client_id, vendor_id')
+        .eq('id', quoteRequestId)
+        .single();
+        
+      if (quoteRequest) {
+        setParticipants(quoteRequest);
+        setCurrentUserId(user.user.id);
+        setIsClient(user.user.id === quoteRequest.client_id);
+      }
+    } catch (error: any) {
+      console.error('Error fetching participants:', error);
+    }
+  };
 
   const fetchRFIs = async () => {
     setLoading(true);
@@ -137,7 +163,7 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden px-8 py-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-primary" />

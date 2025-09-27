@@ -115,7 +115,20 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   const fetchOrCreateInvoice = async () => {
     setLoading(true);
     try {
-      // First, try to get existing invoice - need to find by quote_request_id via quote
+      // First, check if quote is accepted
+      const { data: quoteRequest, error: statusError } = await supabase
+        .from('quote_requests')
+        .select('status')
+        .eq('id', quoteRequestId)
+        .single();
+
+      if (statusError) throw statusError;
+      
+      if (quoteRequest?.status !== 'accepted') {
+        throw new Error('Quote must be accepted before creating invoice');
+      }
+
+      // Try to get existing invoice
       const { data: existingInvoice, error: fetchError } = await supabase
         .from('invoices')
         .select(`
@@ -154,7 +167,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       console.error('Error with invoice:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create invoice',
+        description: error.message || 'Failed to create invoice',
         variant: 'destructive',
       });
     } finally {

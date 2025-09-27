@@ -121,7 +121,7 @@ const FormalRFIModal: React.FC<FormalRFIModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh] overflow-hidden px-8">
+      <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh] max-h-[90vh] overflow-hidden px-12 py-8">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileQuestion className="w-6 h-6 text-primary" />
