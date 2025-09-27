@@ -27,11 +27,20 @@ import QuotesHistory from "./pages/QuotesHistory";
 import VendorPaymentBilling from "./pages/VendorPaymentBilling";
 import VendorDashboard from "./pages/VendorDashboard";
 import { RoleGuard } from "./components/RoleGuard";
+import { useAuth } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
-// Component for vendor redirect logic
+// Component for vendor redirect logic - only for authenticated users
 const VendorRouteHandler = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  
+  // If not authenticated, show the landing page directly
+  if (!user) {
+    return <>{children}</>;
+  }
+  
+  // If authenticated, check user type and redirect vendors
   return (
     <RoleGuard 
       allowedUserTypes={['client']} 

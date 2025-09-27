@@ -138,16 +138,18 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
       if (quoteError) throw quoteError;
 
-      const { data: existingInvoice, error: fetchError } = await supabase
+      // Check for existing invoices for this quote (may have multiple)
+      const { data: existingInvoices, error: fetchError } = await supabase
         .from('invoices')
         .select('*')
         .eq('quote_id', quote.id)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      if (existingInvoice) {
-        setInvoice(existingInvoice);
+      if (existingInvoices && existingInvoices.length > 0) {
+        // Use the most recent invoice
+        setInvoice(existingInvoices[0]);
       } else {
         // Create new invoice
         const { data: invoiceId, error: createError } = await supabase
@@ -162,9 +164,10 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
           .from('invoices')
           .select('*')
           .eq('id', invoiceId)
-          .single();
+          .maybeSingle();
 
         if (newFetchError) throw newFetchError;
+        if (!newInvoice) throw new Error('Failed to fetch created invoice');
 
         setInvoice(newInvoice);
         onInvoiceCreated?.();
