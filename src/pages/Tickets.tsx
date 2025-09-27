@@ -18,6 +18,7 @@ import UpdateQuoteModal from '@/components/UpdateQuoteModal';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
 import NegotiateQuoteModal from '@/components/NegotiateQuoteModal';
 import InvoiceModal from '@/components/InvoiceModal';
+import ViewRFIsModal from '@/components/ViewRFIsModal';
 import { 
   ArrowLeft, 
   Search, 
@@ -154,6 +155,11 @@ const ClientDashboard = () => {
     isOpen: boolean;
     quoteRequestId: string;
   }>({ isOpen: false, quoteRequestId: '' });
+  const [viewRFIsModal, setViewRFIsModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+    projectTitle: string;
+  }>({ isOpen: false, quoteRequestId: '', projectTitle: '' });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -766,22 +772,36 @@ const ClientDashboard = () => {
                            <FileText className="w-4 h-4" />
                            <span className="hidden sm:inline">View Quote</span>
                          </Button>
-                        )}
-                        
-                        {ticket.status === 'accepted' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setInvoiceModal({
-                              isOpen: true,
-                              quoteRequestId: ticket.id
-                            })}
-                            className="flex items-center gap-2 hover:bg-green-50 transition-colors border-green-200 text-green-700"
-                          >
-                            <FileText className="w-4 h-4" />
-                            <span className="hidden sm:inline">Invoice</span>
-                          </Button>
-                        )}
+                         )}
+                         
+                         <Button 
+                           variant="outline" 
+                           size="sm"
+                           onClick={() => setViewRFIsModal({
+                             isOpen: true,
+                             quoteRequestId: ticket.id,
+                             projectTitle: ticket.vendor.name
+                           })}
+                           className="flex items-center gap-2 hover:bg-blue-50 transition-colors border-blue-200 text-blue-700"
+                         >
+                           <FileText className="w-4 h-4" />
+                           <span className="hidden sm:inline">View RFIs</span>
+                         </Button>
+                         
+                         {ticket.status === 'accepted' && (
+                           <Button 
+                             variant="outline" 
+                             size="sm"
+                             onClick={() => setInvoiceModal({
+                               isOpen: true,
+                               quoteRequestId: ticket.id
+                             })}
+                             className="flex items-center gap-2 hover:bg-orange-50 transition-colors border-orange-200 text-orange-700"
+                           >
+                             <FileText className="w-4 h-4" />
+                             <span className="hidden sm:inline">Invoice</span>
+                           </Button>
+                         )}
                         
                         <Button
                          variant="outline" 
@@ -873,6 +893,13 @@ const ClientDashboard = () => {
             }}
           />
         )}
+
+        <ViewRFIsModal
+          isOpen={viewRFIsModal.isOpen}
+          onClose={() => setViewRFIsModal({ isOpen: false, quoteRequestId: '', projectTitle: '' })}
+          quoteRequestId={viewRFIsModal.quoteRequestId}
+          projectTitle={viewRFIsModal.projectTitle}
+        />
 
         <InvoiceModal
           isOpen={invoiceModal.isOpen}

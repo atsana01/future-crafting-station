@@ -274,7 +274,7 @@ const VendorDashboard = () => {
               <CardTitle className="text-sm font-medium">Pending Quotes</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
                 {quoteRequests.filter(q => q.status === 'pending').length}
               </div>
             </CardContent>
@@ -285,7 +285,7 @@ const VendorDashboard = () => {
               <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-accent">
+              <div className="text-2xl font-bold" style={{ color: 'hsl(var(--primary))' }}>
                 {quoteRequests.filter(q => q.status === 'accepted').length}
               </div>
             </CardContent>
@@ -296,7 +296,7 @@ const VendorDashboard = () => {
               <CardTitle className="text-sm font-medium">Response Rate</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">94%</div>
+              <div className="text-2xl font-bold" style={{ color: 'hsl(var(--primary))' }}>94%</div>
             </CardContent>
           </Card>
 
@@ -306,7 +306,7 @@ const VendorDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-1">
-                <div className="text-2xl font-bold">4.8</div>
+                <div className="text-2xl font-bold" style={{ color: 'hsl(var(--primary))' }}>4.8</div>
                 <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
               </div>
             </CardContent>

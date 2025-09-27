@@ -115,11 +115,14 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   const fetchOrCreateInvoice = async () => {
     setLoading(true);
     try {
-      // First, try to get existing invoice
+      // First, try to get existing invoice - need to find by quote_request_id via quote
       const { data: existingInvoice, error: fetchError } = await supabase
         .from('invoices')
-        .select('*')
-        .eq('quote_id', quoteRequestId)
+        .select(`
+          *,
+          quotes!inner(quote_request_id)
+        `)
+        .eq('quotes.quote_request_id', quoteRequestId)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
