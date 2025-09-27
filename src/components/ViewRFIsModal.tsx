@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import RFIResponseModal from './RFIResponseModal';
 import { 
   FileText, 
   Calendar, 
@@ -14,7 +15,8 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Eye
+  Eye,
+  MessageSquare
 } from 'lucide-react';
 
 interface ViewRFIsModalProps {
@@ -36,6 +38,9 @@ interface RFIData {
   created_at: string;
   response_data: any;
   responded_at: string | null;
+  sender_id?: string;
+  category?: string;
+  responses?: any[];
 }
 
 const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
@@ -50,7 +55,7 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
   const [participants, setParticipants] = useState<{ client_id: string; vendor_id: string } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState<boolean>(false);
-  const [responseDraft, setResponseDraft] = useState<{ overall: string; items: Record<string, string> }>({ overall: '', items: {} });
+  const [responseModal, setResponseModal] = useState<{ isOpen: boolean; rfi: any }>({ isOpen: false, rfi: null });
 
   useEffect(() => {
     if (isOpen && quoteRequestId) {
@@ -83,8 +88,7 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
   const fetchRFIs = async () => {
     setLoading(true);
     try {
-      // In a real implementation, you'd fetch from an RFI table
-      // For now, we'll create mock data structure
+      // Fetch RFI messages and responses
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -94,33 +98,57 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
 
       if (error) throw error;
 
-      // Transform message data to RFI format
-      const transformedRFIs = data?.map((msg: any) => {
+      // Transform message data to RFI format and group responses
+      const rfiMap = new Map();
+      
+      data?.forEach((msg: any) => {
         let messageContent: any = {};
         try {
           messageContent = typeof msg.message_content === 'string' 
             ? JSON.parse(msg.message_content) 
             : msg.message_content;
         } catch {
-          messageContent = { title: 'RFI Request', description: msg.message_content };
+          messageContent = { description: msg.message_content };
         }
 
-        return {
-          id: msg.id,
-          title: messageContent.title || 'Request for Information',
-          description: messageContent.description || messageContent.content || msg.message_content,
-          urgency: messageContent.urgency || 'medium',
-          requested_info: messageContent.requested_info || [],
-          additional_notes: messageContent.additional_notes || '',
-          deadline: messageContent.deadline || '',
-          status: messageContent.status || 'pending',
-          created_at: msg.sent_at,
-          response_data: messageContent.response_data || null,
-          responded_at: messageContent.responded_at || null
-        };
-      }) || [];
+        if (messageContent.type === 'rfi_response') {
+          // This is a response to an RFI
+          const originalRFIId = messageContent.originalRFIId;
+          if (rfiMap.has(originalRFIId)) {
+            const rfi = rfiMap.get(originalRFIId);
+            rfi.responses = rfi.responses || [];
+            rfi.responses.push({
+              id: msg.id,
+              sender_id: msg.sender_id,
+              content: messageContent,
+              sent_at: msg.sent_at
+            });
+            rfi.status = 'responded';
+            rfi.responded_at = msg.sent_at;
+          }
+        } else if (messageContent.subject || messageContent.category || messageContent.urgency) {
+          // This is an RFI
+          const rfi = {
+            id: msg.id,
+            sender_id: msg.sender_id,
+            title: messageContent.subject || 'Request for Information',
+            description: messageContent.description || msg.message_content,
+            urgency: messageContent.urgency || 'normal',
+            category: messageContent.category || 'General',
+            requested_info: messageContent.requested_info || [],
+            additional_notes: messageContent.additional_notes || '',
+            deadline: messageContent.responseDeadline || '',
+            status: 'pending',
+            created_at: msg.sent_at,
+            responses: [],
+            response_data: null,
+            responded_at: null
+          };
+          rfiMap.set(msg.id, rfi);
+        }
+      });
 
-      setRfis(transformedRFIs);
+      setRfis(Array.from(rfiMap.values()));
     } catch (error: any) {
       console.error('Error fetching RFIs:', error);
       toast({
@@ -163,7 +191,7 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden px-8 py-6">
+      <DialogContent className="w-[95vw] max-w-5xl h-[85vh] max-h-[85vh] overflow-hidden px-6 py-4">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-primary" />
@@ -172,7 +200,7 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-6 h-[70vh]">
+        <div className="flex gap-4 h-[70vh]">
           {/* RFI List */}
           <div className="w-1/2 space-y-4 overflow-y-auto pr-2">
             <h3 className="font-semibold text-lg">All RFIs</h3>
@@ -300,22 +328,55 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
                   </>
                 )}
 
-                {selectedRFI.response_data && (
+                {selectedRFI.responses && selectedRFI.responses.length > 0 && (
                   <>
                     <Separator />
                     <div>
                       <h4 className="font-semibold mb-3 flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        Response
+                        Responses ({selectedRFI.responses.length})
                       </h4>
-                      <Card className="p-4 bg-green-50 border-green-200">
-                        <p className="text-sm">{JSON.stringify(selectedRFI.response_data, null, 2)}</p>
-                        {selectedRFI.responded_at && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Responded on: {formatDate(selectedRFI.responded_at)}
-                          </p>
-                        )}
-                      </Card>
+                      <div className="space-y-3">
+                        {selectedRFI.responses.map((response: any, index: number) => (
+                          <Card key={index} className="p-4 bg-green-50 border-green-200">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium">Response {index + 1}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDate(response.sent_at)}
+                                </p>
+                              </div>
+                              <p className="text-sm">{response.content.overallResponse}</p>
+                              {response.content.itemResponses && Object.keys(response.content.itemResponses).length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                  <p className="text-xs font-medium text-muted-foreground">Item-specific responses:</p>
+                                  {Object.entries(response.content.itemResponses).map(([key, value]: [string, any]) => (
+                                    <div key={key} className="text-xs">
+                                      <span className="font-medium">Item {parseInt(key) + 1}:</span> {value}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Response Action for Clients */}
+                {isClient && selectedRFI && selectedRFI.sender_id !== currentUserId && selectedRFI.status === 'pending' && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => setResponseModal({ isOpen: true, rfi: selectedRFI })}
+                        className="bg-gradient-primary"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Respond to RFI
+                      </Button>
                     </div>
                   </>
                 )}
@@ -336,6 +397,18 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
             Close
           </Button>
         </div>
+
+        {/* RFI Response Modal */}
+        <RFIResponseModal
+          isOpen={responseModal.isOpen}
+          onClose={() => setResponseModal({ isOpen: false, rfi: null })}
+          rfi={responseModal.rfi}
+          quoteRequestId={quoteRequestId}
+          onResponseSent={() => {
+            fetchRFIs();
+            setResponseModal({ isOpen: false, rfi: null });
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -121,7 +121,7 @@ const FormalRFIModal: React.FC<FormalRFIModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[90vw] max-w-[90vw] h-[90vh] max-h-[90vh] overflow-hidden px-12 py-8">
+      <DialogContent className="w-[95vw] max-w-4xl h-[85vh] max-h-[85vh] overflow-hidden px-6 py-4">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileQuestion className="w-6 h-6 text-primary" />
@@ -130,7 +130,7 @@ const FormalRFIModal: React.FC<FormalRFIModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
           {/* Project Context */}
           <Card className="bg-muted/30">
             <CardHeader className="pb-3">

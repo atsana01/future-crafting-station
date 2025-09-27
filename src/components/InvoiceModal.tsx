@@ -128,14 +128,20 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
         throw new Error('Quote must be accepted before creating invoice');
       }
 
-      // Try to get existing invoice
+      // Try to get existing invoice by finding the quote first
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .select('id')
+        .eq('quote_request_id', quoteRequestId)
+        .eq('is_current_version', true)
+        .single();
+
+      if (quoteError) throw quoteError;
+
       const { data: existingInvoice, error: fetchError } = await supabase
         .from('invoices')
-        .select(`
-          *,
-          quotes!inner(quote_request_id)
-        `)
-        .eq('quotes.quote_request_id', quoteRequestId)
+        .select('*')
+        .eq('quote_id', quote.id)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
