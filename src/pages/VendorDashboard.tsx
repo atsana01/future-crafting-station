@@ -497,7 +497,7 @@ const VendorDashboard = () => {
                             onClick={() => setViewRFIsModal({
                               isOpen: true,
                               quoteRequestId: quote.id,
-                              projectTitle: quote.project.title
+                              projectTitle: quote.project?.title || 'Project'
                             })}
                             className="flex items-center gap-2 hover:bg-blue-50 transition-colors border-blue-200 text-blue-700"
                           >

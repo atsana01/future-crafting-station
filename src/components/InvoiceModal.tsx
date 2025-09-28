@@ -332,9 +332,20 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       }
     } catch (error: any) {
       console.error('Error initiating payment:', error);
+      
+      // Enhanced error handling
+      let errorMessage = 'Failed to initiate payment';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: 'Payment Error',
-        description: error.message || 'Failed to initiate payment',
+        description: errorMessage,
         variant: 'destructive',
       });
     }

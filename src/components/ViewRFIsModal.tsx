@@ -57,12 +57,22 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
   const [isClient, setIsClient] = useState<boolean>(false);
   const [responseModal, setResponseModal] = useState<{ isOpen: boolean; rfi: any }>({ isOpen: false, rfi: null });
 
+  // Safe project title with fallback
+  const safeProjectTitle = projectTitle || 'Project';
+
   useEffect(() => {
     if (isOpen && quoteRequestId) {
       fetchRFIs();
       fetchParticipants();
     }
   }, [isOpen, quoteRequestId]);
+
+  // Auto-select first RFI when rfis change
+  useEffect(() => {
+    if (rfis.length > 0 && !selectedRFI) {
+      setSelectedRFI(rfis[0]);
+    }
+  }, [rfis, selectedRFI]);
 
   const fetchParticipants = async () => {
     try {
@@ -191,11 +201,11 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-5xl h-[85vh] max-h-[85vh] overflow-hidden px-6 py-4">
+      <DialogContent className="w-[95vw] max-w-5xl h-[85vh] max-h-[85vh] overflow-hidden px-8 py-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-primary" />
-            RFIs for {projectTitle}
+            RFIs for {safeProjectTitle}
             <Badge variant="outline">{rfis.length} Total</Badge>
           </DialogTitle>
         </DialogHeader>
