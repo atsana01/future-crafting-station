@@ -266,7 +266,7 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
               <div className="space-y-6 overflow-y-auto max-h-full">
                 <div>
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-semibold text-xl">{selectedRFI.title || 'Request for Information'}</h3>
+                    <h3 className="font-semibold text-xl">{selectedRFI?.title || 'Request for Information'}</h3>
                     <div className="flex gap-2">
                       <Badge variant={getUrgencyColor(selectedRFI.urgency)}>
                         {selectedRFI.urgency} Priority

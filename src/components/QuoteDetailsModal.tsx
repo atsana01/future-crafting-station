@@ -196,6 +196,35 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
     }
   };
 
+  const handleDeleteQuote = async () => {
+    try {
+      const { error } = await supabase
+        .from('quote_requests')
+        .update({ 
+          status: 'declined',
+          deletion_reason: 'Deleted by client',
+          deleted_at: new Date().toISOString()
+        })
+        .eq('id', quoteRequestId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Quote Deleted',
+        description: 'The quote has been deleted successfully',
+      });
+
+      onQuoteAction?.('cancel');
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete quote',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handlePortfolioClick = () => {
     // Check if vendor has portfolio for this category
     // For now, show warning - this should be enhanced to check actual portfolio
@@ -403,6 +432,14 @@ const QuoteDetailsModal: React.FC<QuoteDetailsModalProps> = ({
             >
               <Archive className="w-4 h-4 mr-2" />
               Archive
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteQuote}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Quote
             </Button>
             {isQuoteAccepted && (
               <Button 

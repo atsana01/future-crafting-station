@@ -46,6 +46,7 @@ serve(async (req) => {
 
     // Verify both parties have signed
     if (!invoice.client_signed_at || !invoice.vendor_signed_at) {
+      console.log("Signature status - Client:", !!invoice.client_signed_at, "Vendor:", !!invoice.vendor_signed_at);
       throw new Error("Both parties must sign before payment can be processed");
     }
 

@@ -276,15 +276,46 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     }
   };
 
+  const handleDeclineInvoice = async () => {
+    if (!invoice) return;
+
+    try {
+      const { error } = await supabase
+        .from('quote_requests')
+        .update({ status: 'pending' })
+        .eq('id', quoteRequestId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Invoice Declined',
+        description: 'Quote request has been returned to pending status',
+      });
+
+      onClose();
+    } catch (error: any) {
+      console.error('Error declining invoice:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to decline invoice',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const initiatePayment = async () => {
     if (!invoice) return;
 
     try {
+      console.log('Initiating payment for invoice:', invoice.id);
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { invoiceId: invoice.id }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       if (data?.url) {
         // Redirect to Stripe Checkout
@@ -296,6 +327,8 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
           title: 'Payment Processing',
           description: 'Redirecting to secure payment page...',
         });
+      } else {
+        throw new Error('No payment URL received');
       }
     } catch (error: any) {
       console.error('Error initiating payment:', error);
@@ -529,39 +562,53 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
         </div>
 
         <div className="flex justify-between pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          
-          {canSign && (
-            <Button 
-              onClick={handleSign}
-              disabled={signing}
-              className="bg-gradient-primary"
-            >
-              {signing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing...
-                </>
-              ) : (
-                <>
-                  <PenTool className="w-4 h-4 mr-2" />
-                  Sign Document
-                </>
-              )}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose}>
+              Close
             </Button>
-          )}
+            
+            {!bothSigned && invoice.status === 'pending_signatures' && (
+              <Button 
+                variant="destructive"
+                onClick={handleDeclineInvoice}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Decline Invoice
+              </Button>
+            )}
+          </div>
           
-          {bothSigned && invoice.status !== 'ready_for_payment' && (
-            <Button 
-              onClick={initiatePayment}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Process Payment
-            </Button>
-          )}
+          <div className="flex gap-3">
+            {canSign && (
+              <Button 
+                onClick={handleSign}
+                disabled={signing}
+                className="bg-gradient-primary"
+              >
+                {signing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Signing...
+                  </>
+                ) : (
+                  <>
+                    <PenTool className="w-4 h-4 mr-2" />
+                    Sign Document
+                  </>
+                )}
+              </Button>
+            )}
+            
+            {bothSigned && invoice.status !== 'ready_for_payment' && (
+              <Button 
+                onClick={initiatePayment}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Process Payment
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Signature Modal */}
