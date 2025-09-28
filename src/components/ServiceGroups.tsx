@@ -39,39 +39,39 @@ interface ServiceGroupsProps {
 
 const mockVendors: { [key: string]: Vendor[] } = {
   'Real Estate': [
-    { id: '00000001-0001-4000-8000-000000000001', name: 'Prime Properties Group FAKE', rating: 4.8, reviews: 127, location: 'Downtown', specialty: 'Land Development', avgPrice: '$2,500 - $5,000', deliveryTime: '2-4 weeks', verified: true },
-    { id: '00000001-0001-4000-8000-000000000002', name: 'BuildLand Solutions FAKE', rating: 4.6, reviews: 89, location: 'North District', specialty: 'Residential Plots', avgPrice: '$3,000 - $6,000', deliveryTime: '1-3 weeks', verified: true },
-    { id: '00000001-0001-4000-8000-000000000003', name: 'Metro Land Advisors FAKE', rating: 4.7, reviews: 203, location: 'City Center', specialty: 'Zoning & Permits', avgPrice: '$1,800 - $4,000', deliveryTime: '3-6 weeks', verified: false },
-    { id: '00000001-0001-4000-8000-000000000004', name: 'Urban Development Co FAKE', rating: 4.5, reviews: 156, location: 'East Side', specialty: 'Commercial Land', avgPrice: '$4,000 - $8,000', deliveryTime: '2-5 weeks', verified: true },
-    { id: '00000001-0001-4000-8000-000000000005', name: 'Green Acres Realty FAKE', rating: 4.9, reviews: 78, location: 'Suburbs', specialty: 'Eco-Friendly Lots', avgPrice: '$2,200 - $4,500', deliveryTime: '1-4 weeks', verified: true }
+    { id: '00000001-0001-4000-8000-000000000001', name: 'Prime Properties Group FAKE', rating: 4.8, reviews: 127, location: 'Downtown', specialty: 'Land Development', avgPrice: '€2,500 - €5,000', deliveryTime: '2-4 weeks', verified: true },
+    { id: '00000001-0001-4000-8000-000000000002', name: 'BuildLand Solutions FAKE', rating: 4.6, reviews: 89, location: 'North District', specialty: 'Residential Plots', avgPrice: '€3,000 - €6,000', deliveryTime: '1-3 weeks', verified: true },
+    { id: '00000001-0001-4000-8000-000000000003', name: 'Metro Land Advisors FAKE', rating: 4.7, reviews: 203, location: 'City Center', specialty: 'Zoning & Permits', avgPrice: '€1,800 - €4,000', deliveryTime: '3-6 weeks', verified: false },
+    { id: '00000001-0001-4000-8000-000000000004', name: 'Urban Development Co FAKE', rating: 4.5, reviews: 156, location: 'East Side', specialty: 'Commercial Land', avgPrice: '€4,000 - €8,000', deliveryTime: '2-5 weeks', verified: true },
+    { id: '00000001-0001-4000-8000-000000000005', name: 'Green Acres Realty FAKE', rating: 4.9, reviews: 78, location: 'Suburbs', specialty: 'Eco-Friendly Lots', avgPrice: '€2,200 - €4,500', deliveryTime: '1-4 weeks', verified: true }
   ],
   'Architecture Firm': [
-    { id: '00000002-0002-4000-8000-000000000001', name: 'Modern Design Studio FAKE', rating: 4.9, reviews: 67, location: 'Design District', specialty: 'Contemporary Homes', avgPrice: '$15,000 - $30,000', deliveryTime: '6-12 weeks', verified: true },
-    { id: '00000002-0002-4000-8000-000000000002', name: 'Heritage Architects FAKE', rating: 4.7, reviews: 134, location: 'Historic Quarter', specialty: 'Traditional Style', avgPrice: '$12,000 - $25,000', deliveryTime: '8-14 weeks', verified: true },
-    { id: '00000002-0002-4000-8000-000000000003', name: 'Eco Architecture Lab FAKE', rating: 4.8, reviews: 92, location: 'Green Valley', specialty: 'Sustainable Design', avgPrice: '$18,000 - $35,000', deliveryTime: '10-16 weeks', verified: true },
-    { id: '00000002-0002-4000-8000-000000000004', name: 'Urban Planning Co FAKE', rating: 4.6, reviews: 178, location: 'Business District', specialty: 'Multi-Family Units', avgPrice: '$20,000 - $40,000', deliveryTime: '8-15 weeks', verified: false },
-    { id: '00000002-0002-4000-8000-000000000005', name: 'Innovative Spaces FAKE', rating: 4.8, reviews: 89, location: 'Tech Hub', specialty: 'Smart Homes', avgPrice: '$16,000 - $32,000', deliveryTime: '7-13 weeks', verified: true }
+    { id: '00000002-0002-4000-8000-000000000001', name: 'Modern Design Studio FAKE', rating: 4.9, reviews: 67, location: 'Design District', specialty: 'Contemporary Homes', avgPrice: '€15,000 - €30,000', deliveryTime: '6-12 weeks', verified: true },
+    { id: '00000002-0002-4000-8000-000000000002', name: 'Heritage Architects FAKE', rating: 4.7, reviews: 134, location: 'Historic Quarter', specialty: 'Traditional Style', avgPrice: '€12,000 - €25,000', deliveryTime: '8-14 weeks', verified: true },
+    { id: '00000002-0002-4000-8000-000000000003', name: 'Eco Architecture Lab FAKE', rating: 4.8, reviews: 92, location: 'Green Valley', specialty: 'Sustainable Design', avgPrice: '€18,000 - €35,000', deliveryTime: '10-16 weeks', verified: true },
+    { id: '00000002-0002-4000-8000-000000000004', name: 'Urban Planning Co FAKE', rating: 4.6, reviews: 178, location: 'Business District', specialty: 'Multi-Family Units', avgPrice: '€20,000 - €40,000', deliveryTime: '8-15 weeks', verified: false },
+    { id: '00000002-0002-4000-8000-000000000005', name: 'Innovative Spaces FAKE', rating: 4.8, reviews: 89, location: 'Tech Hub', specialty: 'Smart Homes', avgPrice: '€16,000 - €32,000', deliveryTime: '7-13 weeks', verified: true }
   ],
   'Construction': [
-    { id: '00000003-0003-4000-8000-000000000001', name: 'Elite Builders Inc FAKE', rating: 4.7, reviews: 234, location: 'Industrial Zone', specialty: 'Custom Homes', avgPrice: '$200 - $350/sqft', deliveryTime: '16-24 weeks', verified: true },
-    { id: '00000003-0003-4000-8000-000000000002', name: 'Precision Construction FAKE', rating: 4.8, reviews: 189, location: 'North Side', specialty: 'High-End Residential', avgPrice: '$250 - $400/sqft', deliveryTime: '18-26 weeks', verified: true },
-    { id: '00000003-0003-4000-8000-000000000003', name: 'Rapid Build Solutions FAKE', rating: 4.5, reviews: 298, location: 'South District', specialty: 'Fast Construction', avgPrice: '$180 - $280/sqft', deliveryTime: '12-18 weeks', verified: true },
-    { id: '00000003-0003-4000-8000-000000000004', name: 'Heritage Builders FAKE', rating: 4.6, reviews: 167, location: 'Old Town', specialty: 'Traditional Methods', avgPrice: '$220 - $320/sqft', deliveryTime: '20-28 weeks', verified: false },
-    { id: '00000003-0003-4000-8000-000000000005', name: 'Green Build Co FAKE', rating: 4.9, reviews: 145, location: 'Eco District', specialty: 'Sustainable Building', avgPrice: '$240 - $380/sqft', deliveryTime: '18-25 weeks', verified: true }
+    { id: '00000003-0003-4000-8000-000000000001', name: 'Elite Builders Inc FAKE', rating: 4.7, reviews: 234, location: 'Industrial Zone', specialty: 'Custom Homes', avgPrice: '€200 - €350/sqft', deliveryTime: '16-24 weeks', verified: true },
+    { id: '00000003-0003-4000-8000-000000000002', name: 'Precision Construction FAKE', rating: 4.8, reviews: 189, location: 'North Side', specialty: 'High-End Residential', avgPrice: '€250 - €400/sqft', deliveryTime: '18-26 weeks', verified: true },
+    { id: '00000003-0003-4000-8000-000000000003', name: 'Rapid Build Solutions FAKE', rating: 4.5, reviews: 298, location: 'South District', specialty: 'Fast Construction', avgPrice: '€180 - €280/sqft', deliveryTime: '12-18 weeks', verified: true },
+    { id: '00000003-0003-4000-8000-000000000004', name: 'Heritage Builders FAKE', rating: 4.6, reviews: 167, location: 'Old Town', specialty: 'Traditional Methods', avgPrice: '€220 - €320/sqft', deliveryTime: '20-28 weeks', verified: false },
+    { id: '00000003-0003-4000-8000-000000000005', name: 'Green Build Co FAKE', rating: 4.9, reviews: 145, location: 'Eco District', specialty: 'Sustainable Building', avgPrice: '€240 - €380/sqft', deliveryTime: '18-25 weeks', verified: true }
   ],
   'Electrical': [
-    { id: '00000004-0004-4000-8000-000000000001', name: 'Power Pro Electrical FAKE', rating: 4.7, reviews: 156, location: 'Electric District', specialty: 'Residential Wiring', avgPrice: '$80 - $150/hr', deliveryTime: '1-2 weeks', verified: true },
-    { id: '00000004-0004-4000-8000-000000000002', name: 'Smart Home Electrics FAKE', rating: 4.8, reviews: 89, location: 'Tech Valley', specialty: 'Smart Systems', avgPrice: '$120 - $200/hr', deliveryTime: '2-4 weeks', verified: true },
-    { id: '00000004-0004-4000-8000-000000000003', name: 'Industrial Electric Co FAKE', rating: 4.6, reviews: 234, location: 'Industrial Park', specialty: 'Commercial Electrical', avgPrice: '$100 - $180/hr', deliveryTime: '3-6 weeks', verified: true },
-    { id: '00000004-0004-4000-8000-000000000004', name: 'Green Energy Electric FAKE', rating: 4.9, reviews: 123, location: 'Solar Heights', specialty: 'Solar Systems', avgPrice: '$150 - $250/hr', deliveryTime: '4-8 weeks', verified: true },
-    { id: '00000004-0004-4000-8000-000000000005', name: 'Emergency Electric Services FAKE', rating: 4.5, reviews: 278, location: 'Service Center', specialty: 'Emergency Repairs', avgPrice: '$200 - $300/hr', deliveryTime: 'Same Day', verified: true }
+    { id: '00000004-0004-4000-8000-000000000001', name: 'Power Pro Electrical FAKE', rating: 4.7, reviews: 156, location: 'Electric District', specialty: 'Residential Wiring', avgPrice: '€80 - €150/hr', deliveryTime: '1-2 weeks', verified: true },
+    { id: '00000004-0004-4000-8000-000000000002', name: 'Smart Home Electrics FAKE', rating: 4.8, reviews: 89, location: 'Tech Valley', specialty: 'Smart Systems', avgPrice: '€120 - €200/hr', deliveryTime: '2-4 weeks', verified: true },
+    { id: '00000004-0004-4000-8000-000000000003', name: 'Industrial Electric Co FAKE', rating: 4.6, reviews: 234, location: 'Industrial Park', specialty: 'Commercial Electrical', avgPrice: '€100 - €180/hr', deliveryTime: '3-6 weeks', verified: true },
+    { id: '00000004-0004-4000-8000-000000000004', name: 'Green Energy Electric FAKE', rating: 4.9, reviews: 123, location: 'Solar Heights', specialty: 'Solar Systems', avgPrice: '€150 - €250/hr', deliveryTime: '4-8 weeks', verified: true },
+    { id: '00000004-0004-4000-8000-000000000005', name: 'Emergency Electric Services FAKE', rating: 4.5, reviews: 278, location: 'Service Center', specialty: 'Emergency Repairs', avgPrice: '€200 - €300/hr', deliveryTime: 'Same Day', verified: true }
   ],
   'Mechanical': [
-    { id: '00000005-0005-4000-8000-000000000001', name: 'HVAC Masters FAKE', rating: 4.8, reviews: 189, location: 'Climate District', specialty: 'HVAC Systems', avgPrice: '$90 - $160/hr', deliveryTime: '2-4 weeks', verified: true },
-    { id: '00000005-0005-4000-8000-000000000002', name: 'Plumbing Plus FAKE', rating: 4.7, reviews: 345, location: 'Water Works', specialty: 'Plumbing Systems', avgPrice: '$75 - $130/hr', deliveryTime: '1-3 weeks', verified: true },
-    { id: '00000005-0005-4000-8000-000000000003', name: 'Smart Mechanical FAKE', rating: 4.9, reviews: 67, location: 'Smart District', specialty: 'Smart Systems', avgPrice: '$110 - $190/hr', deliveryTime: '3-5 weeks', verified: true },
-    { id: '00000005-0005-4000-8000-000000000004', name: 'Industrial Mechanical FAKE', rating: 4.6, reviews: 156, location: 'Factory Row', specialty: 'Industrial Systems', avgPrice: '$95 - $170/hr', deliveryTime: '4-8 weeks', verified: true },
-    { id: '00000005-0005-4000-8000-000000000005', name: 'Eco Mechanical FAKE', rating: 4.8, reviews: 98, location: 'Eco Zone', specialty: 'Green Systems', avgPrice: '$85 - $155/hr', deliveryTime: '2-6 weeks', verified: true }
+    { id: '00000005-0005-4000-8000-000000000001', name: 'HVAC Masters FAKE', rating: 4.8, reviews: 189, location: 'Climate District', specialty: 'HVAC Systems', avgPrice: '€90 - €160/hr', deliveryTime: '2-4 weeks', verified: true },
+    { id: '00000005-0005-4000-8000-000000000002', name: 'Plumbing Plus FAKE', rating: 4.7, reviews: 345, location: 'Water Works', specialty: 'Plumbing Systems', avgPrice: '€75 - €130/hr', deliveryTime: '1-3 weeks', verified: true },
+    { id: '00000005-0005-4000-8000-000000000003', name: 'Smart Mechanical FAKE', rating: 4.9, reviews: 67, location: 'Smart District', specialty: 'Smart Systems', avgPrice: '€110 - €190/hr', deliveryTime: '3-5 weeks', verified: true },
+    { id: '00000005-0005-4000-8000-000000000004', name: 'Industrial Mechanical FAKE', rating: 4.6, reviews: 156, location: 'Factory Row', specialty: 'Industrial Systems', avgPrice: '€95 - €170/hr', deliveryTime: '4-8 weeks', verified: true },
+    { id: '00000005-0005-4000-8000-000000000005', name: 'Eco Mechanical FAKE', rating: 4.8, reviews: 98, location: 'Eco Zone', specialty: 'Green Systems', avgPrice: '€85 - €155/hr', deliveryTime: '2-6 weeks', verified: true }
   ]
 };
 

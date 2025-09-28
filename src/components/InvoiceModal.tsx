@@ -280,24 +280,30 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     if (!invoice) return;
 
     try {
-      // Update status to ready for payment
-      const { error } = await supabase
-        .from('invoices')
-        .update({ status: 'ready_for_payment' })
-        .eq('id', invoice.id);
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: { invoiceId: invoice.id }
+      });
 
       if (error) throw error;
 
-      setInvoice(prev => prev ? { ...prev, status: 'ready_for_payment' } : null);
-
-      // Here you would integrate with Stripe
-      // For now, we'll simulate the process
-      toast({
-        title: 'Ready for Payment',
-        description: 'Both parties have signed. Payment processing will begin shortly.',
-      });
+      if (data?.url) {
+        // Redirect to Stripe Checkout
+        window.open(data.url, '_blank');
+        
+        setInvoice(prev => prev ? { ...prev, status: 'payment_processing' } : null);
+        
+        toast({
+          title: 'Payment Processing',
+          description: 'Redirecting to secure payment page...',
+        });
+      }
     } catch (error: any) {
       console.error('Error initiating payment:', error);
+      toast({
+        title: 'Payment Error',
+        description: error.message || 'Failed to initiate payment',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -478,15 +484,42 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
           </Card>
 
           {/* Payment Status */}
-          {bothSigned && (
+          {bothSigned && invoice.status !== 'paid' && (
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-5 h-5 text-green-600" />
+                    <div>
+                      <p className="font-medium text-green-800">Ready for Payment</p>
+                      <p className="text-sm text-green-700">
+                        Both parties have signed. Client can now proceed with payment.
+                      </p>
+                    </div>
+                  </div>
+                  {userRole === 'client' && (invoice.status === 'pending_signatures' || invoice.status === 'ready_for_payment') && (
+                    <Button 
+                      onClick={initiatePayment}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Pay Now
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {invoice.status === 'paid' && (
             <Card className="border-green-200 bg-green-50">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <CreditCard className="w-5 h-5 text-green-600" />
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
                   <div>
-                    <p className="font-medium text-green-800">Ready for Payment</p>
+                    <p className="font-medium text-green-800">Payment Completed</p>
                     <p className="text-sm text-green-700">
-                      Both parties have signed. Payment will be processed automatically.
+                      Invoice has been paid successfully.
                     </p>
                   </div>
                 </div>
