@@ -583,7 +583,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               <Button 
                 onClick={handleSign}
                 disabled={signing}
-                className="bg-gradient-primary"
+                className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 {signing ? (
                   <>
@@ -599,13 +599,13 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
               </Button>
             )}
             
-            {bothSigned && invoice.status !== 'ready_for_payment' && (
+            {bothSigned && userRole === 'client' && (
               <Button 
                 onClick={initiatePayment}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 text-white"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
-                Process Payment
+                Pay Now
               </Button>
             )}
           </div>

@@ -55,7 +55,12 @@ serve(async (req) => {
       throw new Error("Only the client can initiate payment");
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      throw new Error("Stripe secret key not configured");
+    }
+
+    const stripe = new Stripe(stripeSecretKey, { 
       apiVersion: "2025-08-27.basil" 
     });
     

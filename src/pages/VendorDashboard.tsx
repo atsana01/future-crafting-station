@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building, Star, Clock, MessageSquare, Euro, User, MonitorSpeaker, Trash2 } from 'lucide-react';
+import { Building, Star, Clock, MessageSquare, Euro, User, MonitorSpeaker, Trash2, FileText } from 'lucide-react';
 import { BsCardChecklist } from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import EnhancedSendQuoteModal from '@/components/EnhancedSendQuoteModal';
 import FormalRFIModal from '@/components/FormalRFIModal';
 import InvoiceModal from '@/components/InvoiceModal';
+import ViewRFIsModal from '@/components/ViewRFIsModal';
 import { formatClientName } from '@/utils/formatters';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
 
@@ -79,6 +80,16 @@ const VendorDashboard = () => {
   }>({
     isOpen: false,
     quoteRequestId: ''
+  });
+
+  const [viewRFIsModal, setViewRFIsModal] = useState<{
+    isOpen: boolean;
+    quoteRequestId: string;
+    projectTitle: string;
+  }>({
+    isOpen: false,
+    quoteRequestId: '',
+    projectTitle: ''
   });
 
   useEffect(() => {
@@ -480,6 +491,19 @@ const VendorDashboard = () => {
                             <BsCardChecklist className="w-4 h-4 mr-1" />
                             RFI
                           </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setViewRFIsModal({
+                              isOpen: true,
+                              quoteRequestId: quote.id,
+                              projectTitle: quote.project.title
+                            })}
+                            className="flex items-center gap-2 hover:bg-blue-50 transition-colors border-blue-200 text-blue-700"
+                          >
+                            <FileText className="w-4 h-4" />
+                            View RFIs
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -523,6 +547,13 @@ const VendorDashboard = () => {
           onClose={() => setInvoiceModal({ isOpen: false, quoteRequestId: '' })}
           quoteRequestId={invoiceModal.quoteRequestId}
           onInvoiceCreated={() => fetchQuoteRequests()}
+        />
+
+        <ViewRFIsModal
+          isOpen={viewRFIsModal.isOpen}
+          onClose={() => setViewRFIsModal({ isOpen: false, quoteRequestId: '', projectTitle: '' })}
+          quoteRequestId={viewRFIsModal.quoteRequestId}
+          projectTitle={viewRFIsModal.projectTitle}
         />
       </div>
     </div>
