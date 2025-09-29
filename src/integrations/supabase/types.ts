@@ -927,6 +927,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_sensitive_data_access: {
+        Args: {
+          access_type: string
+          accessed_table: string
+          accessed_user_id: string
+        }
+        Returns: undefined
+      }
       log_vendor_profile_access: {
         Args: {
           access_type: string
