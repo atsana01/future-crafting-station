@@ -172,7 +172,7 @@ const EnhancedChatModal: React.FC<ChatModalProps> = ({
         file_url: fileUrl
       };
 
-      console.log('Sending message with data:', messageData); // Debug log
+      // Message data prepared for sending
       
       const { data, error } = await supabase
         .from('messages')
@@ -180,11 +180,8 @@ const EnhancedChatModal: React.FC<ChatModalProps> = ({
         .select();
 
       if (error) {
-        console.error('Database error:', error);
         throw error;
       }
-
-      console.log('Message sent successfully:', data); // Debug log
       
       toast({
         title: 'Message sent',

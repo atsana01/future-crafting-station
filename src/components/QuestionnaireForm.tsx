@@ -49,8 +49,7 @@ const QuestionnaireForm: React.FC<QuestionnaireFormProps> = ({ projectDescriptio
   const numBedrooms = bedroomMatch ? parseInt(bedroomMatch[1]) : 3;
   const numBathrooms = bathroomMatch ? parseInt(bathroomMatch[1]) : 2;
 
-  console.log('Bedroom match:', bedroomMatch, 'Bathroom match:', bathroomMatch);
-  console.log('Num bedrooms:', numBedrooms, 'Num bathrooms:', numBathrooms);
+  // Extracted room counts from project description
   const hasPool = projectDescription.toLowerCase().includes('pool');
   const hasGarden = projectDescription.toLowerCase().includes('garden');
 

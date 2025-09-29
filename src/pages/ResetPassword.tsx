@@ -31,8 +31,6 @@ const ResetPassword = () => {
         
         // Handle different auth scenarios
         if (type === 'recovery' && accessToken && refreshToken) {
-          console.log('Processing password reset with tokens...');
-          
           // Set the session with the tokens from the URL
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -40,11 +38,9 @@ const ResetPassword = () => {
           });
 
           if (error) {
-            console.error('Session set error:', error);
             setError('Failed to authenticate reset link. The link may be expired or invalid.');
             setShowResendOption(true);
           } else {
-            console.log('Password reset session established successfully');
             setIsValidSession(true);
             // Session is valid, user can proceed to reset password
           }

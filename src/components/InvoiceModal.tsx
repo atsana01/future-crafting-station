@@ -307,13 +307,11 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     if (!invoice) return;
 
     try {
-      console.log('Initiating payment for invoice:', invoice.id);
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { invoiceId: invoice.id }
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
         throw error;
       }
 
