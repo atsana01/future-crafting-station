@@ -6,11 +6,11 @@ interface QuoteStatusChartProps {
 }
 
 const COLORS = {
-  pending: 'hsl(var(--chart-1))',
-  quoted: 'hsl(var(--chart-2))',
-  accepted: 'hsl(var(--chart-3))',
-  declined: 'hsl(var(--chart-4))',
-  completed: 'hsl(var(--chart-5))'
+  pending: 'hsl(45, 93%, 58%)',     // Warning yellow
+  quoted: 'hsl(217, 91%, 60%)',     // Primary blue
+  accepted: 'hsl(142, 71%, 45%)',   // Success green
+  declined: 'hsl(0, 84%, 60%)',     // Destructive red
+  completed: 'hsl(262, 83%, 58%)'   // Purple accent
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -22,9 +22,12 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export const QuoteStatusChart = ({ data }: QuoteStatusChartProps) => {
+  const totalCount = Object.values(data).reduce((sum, count) => sum + count, 0);
+  
   const chartData = Object.entries(data).map(([status, count]) => ({
     name: STATUS_LABELS[status] || status,
     value: count,
+    percentage: totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : '0',
     color: COLORS[status as keyof typeof COLORS] || 'hsl(var(--muted))'
   }));
 
@@ -41,7 +44,6 @@ export const QuoteStatusChart = ({ data }: QuoteStatusChartProps) => {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
@@ -56,8 +58,17 @@ export const QuoteStatusChart = ({ data }: QuoteStatusChartProps) => {
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px'
               }}
+              formatter={(value: number, name: string, props: any) => [
+                `${value} (${props.payload.percentage}%)`,
+                name
+              ]}
             />
-            <Legend />
+            <Legend 
+              formatter={(value: string, entry: any) => {
+                const item = chartData.find(d => d.name === value);
+                return `${value}: ${item?.value || 0} (${item?.percentage || 0}%)`;
+              }}
+            />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>

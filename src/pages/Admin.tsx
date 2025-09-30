@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
-const ADMIN_EMAIL = 'necronofficial@gmail.com';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -18,11 +17,12 @@ const Admin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // If user is already logged in and is admin, redirect to dashboard
     const checkAdminStatus = async () => {
-      if (user && user.email === ADMIN_EMAIL) {
+      if (user) {
         const { data } = await supabase
           .from('profiles')
           .select('user_type')
@@ -30,7 +30,7 @@ const Admin = () => {
           .single();
 
         if (data?.user_type === 'admin') {
-          navigate('/admin-dashboard', { replace: true });
+          navigate('/admin/overview', { replace: true });
         }
       }
     };
@@ -40,15 +40,11 @@ const Admin = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    // Validate admin email
-    if (email !== ADMIN_EMAIL) {
-      return;
-    }
-
-    const { error } = await signIn(email, password);
+    const { error: signInError } = await signIn(email, password);
     
-    if (!error) {
+    if (!signInError) {
       // Verify admin status after successful login
       const { data } = await supabase
         .from('profiles')
@@ -57,7 +53,10 @@ const Admin = () => {
         .single();
 
       if (data?.user_type === 'admin') {
-        navigate('/admin-dashboard', { replace: true });
+        navigate('/admin/overview', { replace: true });
+      } else {
+        setError('Access denied. You do not have admin privileges.');
+        await supabase.auth.signOut();
       }
     }
   };
@@ -78,6 +77,13 @@ const Admin = () => {
         </CardHeader>
         
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="admin-email" className="flex items-center gap-2">

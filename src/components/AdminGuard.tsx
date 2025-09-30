@@ -4,8 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const ADMIN_EMAIL = 'necronofficial@gmail.com';
-
 interface AdminGuardProps {
   children: ReactNode;
 }
@@ -23,15 +21,7 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
       }
 
       try {
-        // Check if user email matches admin email
-        if (user.email !== ADMIN_EMAIL) {
-          toast.error('Access denied: Admin privileges required');
-          setIsAdmin(false);
-          setLoading(false);
-          return;
-        }
-
-        // Check if user has admin role in database
+        // Check if user has admin role in database (role-based, not email-based)
         const { data, error } = await supabase
           .from('profiles')
           .select('user_type')
@@ -75,7 +65,7 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
   }
 
   if (!user || !isAdmin) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

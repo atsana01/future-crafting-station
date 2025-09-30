@@ -31,6 +31,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
 import { AdminGuard } from "./components/AdminGuard";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminQuotes from "./pages/admin/AdminQuotes";
+import AdminTickets from "./pages/admin/AdminTickets";
+import AdminChats from "./pages/admin/AdminChats";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminVendors from "./pages/admin/AdminVendors";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminInvoices from "./pages/admin/AdminInvoices";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAudit from "./pages/admin/AdminAudit";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +92,76 @@ const App = () => (
                 <Route path="/admin-dashboard" element={
                   <AdminGuard>
                     <AdminDashboard />
+                  </AdminGuard>
+                } />
+                <Route path="/admin/overview" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminOverview />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/quotes" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminQuotes />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/tickets" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminTickets />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/chats" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminChats />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/users" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminUsers />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/vendors" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminVendors />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/analytics" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminAnalytics />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/invoices" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminInvoices />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/settings" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminSettings />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/audit" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminAudit />
+                    </AdminLayout>
                   </AdminGuard>
                 } />
                 <Route path="/reset-password" element={<ResetPassword />} />
