@@ -10,8 +10,6 @@ import RFIResponseModal from './RFIResponseModal';
 import { 
   FileText, 
   Calendar, 
-  User, 
-  Building,
   Clock,
   CheckCircle2,
   AlertCircle,
@@ -23,83 +21,85 @@ interface ViewRFIsModalProps {
   isOpen: boolean;
   onClose: () => void;
   quoteRequestId: string;
-  projectTitle: string;
+  projectTitle?: string;
 }
 
-interface RFIData {
+interface RFIMessage {
   id: string;
   title: string;
   description: string;
   urgency: string;
+  category: string;
   requested_info: any[];
   additional_notes: string;
   deadline: string;
   status: string;
   created_at: string;
-  response_data: any;
-  responded_at: string | null;
-  sender_id?: string;
-  category?: string;
-  responses?: any[];
+  sender_id: string;
+  responses: RFIResponse[];
+}
+
+interface RFIResponse {
+  id: string;
+  sender_id: string;
+  content: any;
+  sent_at: string;
 }
 
 const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
   isOpen,
   onClose,
   quoteRequestId,
-  projectTitle
+  projectTitle = 'Project'
 }) => {
-  const [rfis, setRfis] = useState<RFIData[]>([]);
+  const [rfis, setRfis] = useState<RFIMessage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRFI, setSelectedRFI] = useState<RFIData | null>(null);
-  const [participants, setParticipants] = useState<{ client_id: string; vendor_id: string } | null>(null);
+  const [selectedRFI, setSelectedRFI] = useState<RFIMessage | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState<boolean>(false);
-  const [responseModal, setResponseModal] = useState<{ isOpen: boolean; rfi: any }>({ isOpen: false, rfi: null });
-
-  // Safe project title with fallback
-  const safeProjectTitle = projectTitle || 'Project';
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [responseModal, setResponseModal] = useState<{ isOpen: boolean; rfi: any }>({ 
+    isOpen: false, 
+    rfi: null 
+  });
 
   useEffect(() => {
     if (isOpen && quoteRequestId) {
-      fetchRFIs();
-      fetchParticipants();
+      loadRFIs();
+      loadUserContext();
     }
   }, [isOpen, quoteRequestId]);
 
-  // Auto-select first RFI when rfis change
   useEffect(() => {
     if (rfis.length > 0 && !selectedRFI) {
       setSelectedRFI(rfis[0]);
     }
-  }, [rfis, selectedRFI]);
+  }, [rfis]);
 
-  const fetchParticipants = async () => {
+  const loadUserContext = async () => {
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
       
+      setCurrentUserId(user.id);
+
       const { data: quoteRequest } = await supabase
         .from('quote_requests')
-        .select('client_id, vendor_id')
+        .select('client_id')
         .eq('id', quoteRequestId)
         .single();
         
       if (quoteRequest) {
-        setParticipants(quoteRequest);
-        setCurrentUserId(user.user.id);
-        setIsClient(user.user.id === quoteRequest.client_id);
+        setClientId(quoteRequest.client_id);
       }
-    } catch (error: any) {
-      console.error('Error fetching participants:', error);
+    } catch (error) {
+      console.error('Error loading user context:', error);
     }
   };
 
-  const fetchRFIs = async () => {
+  const loadRFIs = async () => {
     setLoading(true);
     try {
-      // Fetch RFI messages and responses
-      const { data, error } = await supabase
+      const { data: messages, error } = await supabase
         .from('messages')
         .select('*')
         .eq('quote_request_id', quoteRequestId)
@@ -108,59 +108,52 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
 
       if (error) throw error;
 
-      // Transform message data to RFI format and group responses
-      const rfiMap = new Map();
+      const rfiMap = new Map<string, RFIMessage>();
       
-      data?.forEach((msg: any) => {
-        let messageContent: any = {};
+      messages?.forEach((msg: any) => {
+        let content: any = {};
         try {
-          messageContent = typeof msg.message_content === 'string' 
+          content = typeof msg.message_content === 'string' 
             ? JSON.parse(msg.message_content) 
             : msg.message_content;
         } catch {
-          messageContent = { description: msg.message_content };
+          content = { description: msg.message_content };
         }
 
-        if (messageContent.type === 'rfi_response') {
-          // This is a response to an RFI
-          const originalRFIId = messageContent.originalRFIId;
+        if (content.type === 'rfi_response') {
+          const originalRFIId = content.originalRFIId;
           if (rfiMap.has(originalRFIId)) {
-            const rfi = rfiMap.get(originalRFIId);
-            rfi.responses = rfi.responses || [];
+            const rfi = rfiMap.get(originalRFIId)!;
             rfi.responses.push({
               id: msg.id,
               sender_id: msg.sender_id,
-              content: messageContent,
+              content: content,
               sent_at: msg.sent_at
             });
             rfi.status = 'responded';
-            rfi.responded_at = msg.sent_at;
           }
-        } else if (messageContent.subject || messageContent.category || messageContent.urgency) {
-          // This is an RFI
-          const rfi = {
+        } else if (content.subject || content.category || content.urgency) {
+          const rfiMessage: RFIMessage = {
             id: msg.id,
             sender_id: msg.sender_id,
-            title: messageContent.subject || 'Request for Information',
-            description: messageContent.description || msg.message_content,
-            urgency: messageContent.urgency || 'normal',
-            category: messageContent.category || 'General',
-            requested_info: messageContent.requested_info || [],
-            additional_notes: messageContent.additional_notes || '',
-            deadline: messageContent.responseDeadline || '',
+            title: content.subject || 'Request for Information',
+            description: content.description || '',
+            urgency: content.urgency || 'normal',
+            category: content.category || 'General',
+            requested_info: Array.isArray(content.requested_info) ? content.requested_info : [],
+            additional_notes: content.additional_notes || '',
+            deadline: content.responseDeadline || '',
             status: 'pending',
             created_at: msg.sent_at,
-            responses: [],
-            response_data: null,
-            responded_at: null
+            responses: []
           };
-          rfiMap.set(msg.id, rfi);
+          rfiMap.set(msg.id, rfiMessage);
         }
       });
 
       setRfis(Array.from(rfiMap.values()));
     } catch (error: any) {
-      console.error('Error fetching RFIs:', error);
+      console.error('Error loading RFIs:', error);
       toast({
         title: 'Error',
         description: 'Failed to load RFIs',
@@ -171,7 +164,7 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
     }
   };
 
-  const getUrgencyColor = (urgency: string) => {
+  const getUrgencyColor = (urgency: string): any => {
     switch (urgency.toLowerCase()) {
       case 'high': return 'destructive';
       case 'medium': return 'secondary';
@@ -180,16 +173,16 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): any => {
     switch (status.toLowerCase()) {
-      case 'completed': return 'default';
+      case 'responded': return 'default';
       case 'pending': return 'secondary';
-      case 'in_progress': return 'outline';
       default: return 'secondary';
     }
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -199,31 +192,35 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
     });
   };
 
+  const isClient = currentUserId === clientId;
+  const canRespond = (rfi: RFIMessage) => 
+    isClient && rfi.sender_id !== currentUserId && rfi.status === 'pending';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-5xl h-[85vh] max-h-[85vh] overflow-hidden px-8 py-6">
+      <DialogContent className="w-[95vw] max-w-5xl h-[85vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-primary" />
-            RFIs for {safeProjectTitle}
+            RFIs for {projectTitle}
             <Badge variant="outline">{rfis.length} Total</Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-4 h-[70vh]">
+        <div className="flex gap-4 h-[calc(85vh-120px)]">
           {/* RFI List */}
           <div className="w-1/2 space-y-4 overflow-y-auto pr-2">
-            <h3 className="font-semibold text-lg">All RFIs</h3>
+            <h3 className="font-semibold text-lg sticky top-0 bg-background pb-2">All RFIs</h3>
             
             {loading ? (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : rfis.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No RFIs have been submitted for this project yet.</p>
+                  <p className="text-muted-foreground">No RFIs submitted yet</p>
                 </CardContent>
               </Card>
             ) : (
@@ -271,15 +268,15 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
           </div>
 
           {/* RFI Details */}
-          <div className="w-1/2 border-l pl-6">
+          <div className="w-1/2 border-l pl-6 overflow-y-auto">
             {selectedRFI ? (
-              <div className="space-y-6 overflow-y-auto max-h-full">
+              <div className="space-y-6">
                 <div>
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-semibold text-xl">{selectedRFI ? (selectedRFI.title || 'Request for Information') : 'Request for Information'}</h3>
+                    <h3 className="font-semibold text-xl">{selectedRFI.title}</h3>
                     <div className="flex gap-2">
                       <Badge variant={getUrgencyColor(selectedRFI.urgency)}>
-                        {selectedRFI.urgency} Priority
+                        {selectedRFI.urgency}
                       </Badge>
                       <Badge variant={getStatusColor(selectedRFI.status)}>
                         {selectedRFI.status}
@@ -316,9 +313,13 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
                       <div className="space-y-3">
                         {selectedRFI.requested_info.map((item: any, index: number) => (
                           <Card key={index} className="p-4">
-                            <h5 className="font-medium mb-2">{item.category || `Item ${index + 1}`}</h5>
-                            <p className="text-sm text-muted-foreground">{item.description || item}</p>
-                            {item.required && (
+                            <h5 className="font-medium mb-2">
+                              {typeof item === 'object' ? item.category || `Item ${index + 1}` : `Item ${index + 1}`}
+                            </h5>
+                            <p className="text-sm text-muted-foreground">
+                              {typeof item === 'object' ? item.description || item : item}
+                            </p>
+                            {typeof item === 'object' && item.required && (
                               <Badge variant="destructive" className="mt-2">Required</Badge>
                             )}
                           </Card>
@@ -356,10 +357,10 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
                                   {formatDate(response.sent_at)}
                                 </p>
                               </div>
-                              <p className="text-sm">{response.content.overallResponse}</p>
+                              <p className="text-sm">{response.content.overallResponse || 'No response text'}</p>
                               {response.content.itemResponses && Object.keys(response.content.itemResponses).length > 0 && (
                                 <div className="mt-3 space-y-2">
-                                  <p className="text-xs font-medium text-muted-foreground">Item-specific responses:</p>
+                                  <p className="text-xs font-medium text-muted-foreground">Item responses:</p>
                                   {Object.entries(response.content.itemResponses).map(([key, value]: [string, any]) => (
                                     <div key={key} className="text-xs">
                                       <span className="font-medium">Item {parseInt(key) + 1}:</span> {value}
@@ -375,14 +376,12 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
                   </>
                 )}
 
-                {/* Response Action for Clients */}
-                {isClient && selectedRFI && selectedRFI.sender_id !== currentUserId && selectedRFI.status === 'pending' && (
+                {canRespond(selectedRFI) && (
                   <>
                     <Separator />
                     <div className="flex justify-center">
                       <Button
                         onClick={() => setResponseModal({ isOpen: true, rfi: selectedRFI })}
-                        className="bg-gradient-primary"
                       >
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Respond to RFI
@@ -408,14 +407,13 @@ const ViewRFIsModal: React.FC<ViewRFIsModalProps> = ({
           </Button>
         </div>
 
-        {/* RFI Response Modal */}
         <RFIResponseModal
           isOpen={responseModal.isOpen}
           onClose={() => setResponseModal({ isOpen: false, rfi: null })}
           rfi={responseModal.rfi}
           quoteRequestId={quoteRequestId}
           onResponseSent={() => {
-            fetchRFIs();
+            loadRFIs();
             setResponseModal({ isOpen: false, rfi: null });
           }}
         />

@@ -1,4 +1,3 @@
-// Clean up unused imports and optimize code structure
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,14 +11,14 @@ import { toast } from '@/hooks/use-toast';
 import { 
   FileText, 
   Euro, 
-  User, 
-  Building, 
   Calendar,
   PenTool,
-  CreditCard,
   CheckCircle2,
   Info,
-  Percent
+  Percent,
+  CreditCard,
+  User,
+  Building
 } from 'lucide-react';
 
 interface InvoiceModalProps {
@@ -41,6 +40,7 @@ interface InvoiceData {
   vendor_id: string;
   client_signed_at: string | null;
   vendor_signed_at: string | null;
+  paid_at: string | null;
   created_at: string;
 }
 
@@ -52,83 +52,47 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 }) => {
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [signing, setSigning] = useState(false);
-
-  const [userRole, setUserRole] = useState<string | null>(null);
-
-  const [signModal, setSignModal] = useState<{
-    isOpen: boolean;
-    userRole: string;
-    requiredName: string;
-  }>({ isOpen: false, userRole: '', requiredName: '' });
-
+  const [processing, setProcessing] = useState(false);
+  const [userRole, setUserRole] = useState<'client' | 'vendor' | null>(null);
+  const [signModal, setSignModal] = useState(false);
   const [signatureName, setSignatureName] = useState('');
+  const [requiredName, setRequiredName] = useState('');
 
   useEffect(() => {
     if (isOpen && quoteRequestId) {
-      fetchOrCreateInvoice();
+      loadInvoice();
     }
   }, [isOpen, quoteRequestId]);
 
   useEffect(() => {
     if (invoice) {
-      getCurrentUserRole().then(setUserRole);
+      determineUserRole();
     }
   }, [invoice]);
 
-  useEffect(() => {
-    if (signModal.isOpen && userRole && invoice) {
-      loadRequiredName();
-    }
-  }, [signModal.isOpen, userRole, invoice]);
-
-  const loadRequiredName = async () => {
-    if (!invoice || !userRole) return;
-
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
-
-      let requiredName = '';
-      if (user.user.id === invoice.client_id) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('user_id', user.user.id)
-          .single();
-        requiredName = profile?.full_name || '';
-      } else if (user.user.id === invoice.vendor_id) {
-        const { data: vendorProfile } = await supabase
-          .from('vendor_profiles')
-          .select('business_name')
-          .eq('user_id', user.user.id)
-          .single();
-        requiredName = vendorProfile?.business_name || '';
-      }
-
-      setSignModal(prev => ({ ...prev, requiredName }));
-    } catch (error) {
-      console.error('Error loading required name:', error);
-    }
-  };
-
-  const fetchOrCreateInvoice = async () => {
+  const loadInvoice = async () => {
     setLoading(true);
     try {
-      // First, check if quote is accepted
-      const { data: quoteRequest, error: statusError } = await supabase
+      // Check if quote is accepted
+      const { data: quoteRequest, error: qrError } = await supabase
         .from('quote_requests')
         .select('status')
         .eq('id', quoteRequestId)
         .single();
 
-      if (statusError) throw statusError;
+      if (qrError) throw qrError;
       
       if (quoteRequest?.status !== 'accepted') {
-        throw new Error('Quote must be accepted before creating invoice');
+        toast({
+          title: 'Error',
+          description: 'Quote must be accepted before creating invoice',
+          variant: 'destructive',
+        });
+        onClose();
+        return;
       }
 
-      // Try to get existing invoice by finding the quote first
+      // Get the quote
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
         .select('id')
@@ -138,17 +102,17 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
       if (quoteError) throw quoteError;
 
-      // Check for existing invoices for this quote (may have multiple)
-      const { data: existingInvoices, error: fetchError } = await supabase
+      // Check for existing invoice
+      const { data: existingInvoices, error: invError } = await supabase
         .from('invoices')
         .select('*')
         .eq('quote_id', quote.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (fetchError) throw fetchError;
+      if (invError) throw invError;
 
       if (existingInvoices && existingInvoices.length > 0) {
-        // Use the most recent invoice
         setInvoice(existingInvoices[0]);
       } else {
         // Create new invoice
@@ -159,83 +123,105 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
         if (createError) throw createError;
 
-        // Fetch the created invoice
-        const { data: newInvoice, error: newFetchError } = await supabase
+        const { data: newInvoice, error: fetchError } = await supabase
           .from('invoices')
           .select('*')
           .eq('id', invoiceId)
-          .maybeSingle();
+          .single();
 
-        if (newFetchError) throw newFetchError;
-        if (!newInvoice) throw new Error('Failed to fetch created invoice');
-
+        if (fetchError) throw fetchError;
+        
         setInvoice(newInvoice);
         onInvoiceCreated?.();
       }
     } catch (error: any) {
-      console.error('Error with invoice:', error);
+      console.error('Error loading invoice:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create invoice',
+        description: error.message || 'Failed to load invoice',
         variant: 'destructive',
       });
+      onClose();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSign = async () => {
+  const determineUserRole = async () => {
     if (!invoice) return;
-    setSignModal({ isOpen: true, userRole: userRole || '', requiredName: '' });
-  };
-
-  const processSignature = async () => {
-    if (!invoice || !signatureName.trim()) return;
-
-    setSigning(true);
+    
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
-
-      // Get user's profile or vendor profile to validate name
-      let requiredName = '';
-      if (user.user.id === invoice.client_id) {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+      
+      if (userId === invoice.client_id) {
+        setUserRole('client');
+        // Get client name
         const { data: profile } = await supabase
           .from('profiles')
           .select('full_name')
-          .eq('user_id', user.user.id)
+          .eq('user_id', userId)
           .single();
-        requiredName = profile?.full_name || '';
-      } else if (user.user.id === invoice.vendor_id) {
+        setRequiredName(profile?.full_name || '');
+      } else if (userId === invoice.vendor_id) {
+        setUserRole('vendor');
+        // Get vendor business name
         const { data: vendorProfile } = await supabase
           .from('vendor_profiles')
           .select('business_name')
-          .eq('user_id', user.user.id)
+          .eq('user_id', userId)
           .single();
-        requiredName = vendorProfile?.business_name || '';
+        setRequiredName(vendorProfile?.business_name || '');
       }
+    } catch (error) {
+      console.error('Error determining user role:', error);
+    }
+  };
 
-      if (signatureName.trim().toLowerCase() !== signModal.requiredName.toLowerCase()) {
-        toast({
-          title: 'Signature Name Mismatch',
-          description: `Please enter exactly: ${signModal.requiredName}`,
-          variant: 'destructive',
-        });
-        setSigning(false);
-        return;
-      }
+  const handleSign = () => {
+    setSignModal(true);
+  };
 
-      const signatureUrl = `signature-${user.user.id}-${Date.now()}`;
+  const processSignature = async () => {
+    if (!invoice || !signatureName.trim() || !requiredName) return;
+
+    if (signatureName.trim().toLowerCase() !== requiredName.toLowerCase()) {
+      toast({
+        title: 'Invalid Signature',
+        description: `Please enter exactly: ${requiredName}`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
       const now = new Date().toISOString();
-
+      const signatureUrl = `signature-${user.user.id}-${Date.now()}`;
+      
       const updateData: any = {};
       
-      if (user.user.id === invoice.client_id) {
+      if (userRole === 'client') {
         updateData.client_signature_url = signatureUrl;
         updateData.client_signed_at = now;
-      } else if (user.user.id === invoice.vendor_id) {
+        // Update status to awaiting vendor signature
+        if (!invoice.vendor_signed_at) {
+          updateData.status = 'awaiting_vendor_signature';
+        } else {
+          updateData.status = 'awaiting_payment';
+        }
+      } else if (userRole === 'vendor') {
         updateData.vendor_signature_url = signatureUrl;
         updateData.vendor_signed_at = now;
+        // Update status to awaiting client signature
+        if (!invoice.client_signed_at) {
+          updateData.status = 'awaiting_client_signature';
+        } else {
+          updateData.status = 'awaiting_payment';
+        }
       }
 
       const { error } = await supabase
@@ -245,51 +231,72 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
 
       if (error) throw error;
 
-      // Update local state
       setInvoice(prev => prev ? { ...prev, ...updateData } : null);
-
+      
       toast({
         title: 'Signed Successfully',
         description: 'Your digital signature has been recorded',
       });
 
-      setSignModal({ isOpen: false, userRole: '', requiredName: '' });
+      setSignModal(false);
       setSignatureName('');
-
-      // Check if both parties have signed, then proceed to payment
-      const bothSigned = (updateData.client_signed_at || invoice.client_signed_at) && 
-                        (updateData.vendor_signed_at || invoice.vendor_signed_at);
-      
-      if (bothSigned) {
-        await initiatePayment();
-      }
-
     } catch (error: any) {
       console.error('Error signing:', error);
       toast({
         title: 'Error',
-        description: 'Failed to sign document',
+        description: 'Failed to sign invoice',
         variant: 'destructive',
       });
     } finally {
-      setSigning(false);
+      setProcessing(false);
     }
   };
 
-  const handleDeclineInvoice = async () => {
+  const handlePayment = async () => {
     if (!invoice) return;
 
+    setProcessing(true);
     try {
+      const now = new Date().toISOString();
+      
       const { error } = await supabase
+        .from('invoices')
+        .update({
+          paid_at: now,
+          status: 'paid'
+        })
+        .eq('id', invoice.id);
+
+      if (error) throw error;
+
+      setInvoice(prev => prev ? { ...prev, paid_at: now, status: 'paid' } : null);
+      
+      toast({
+        title: 'Payment Successful',
+        description: 'Invoice has been marked as paid',
+      });
+    } catch (error: any) {
+      console.error('Error processing payment:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process payment',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    try {
+      await supabase
         .from('quote_requests')
         .update({ status: 'pending' })
         .eq('id', quoteRequestId);
 
-      if (error) throw error;
-
       toast({
         title: 'Invoice Declined',
-        description: 'Quote request has been returned to pending status',
+        description: 'Quote request returned to pending status',
       });
 
       onClose();
@@ -300,67 +307,6 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
         description: 'Failed to decline invoice',
         variant: 'destructive',
       });
-    }
-  };
-
-  const initiatePayment = async () => {
-    if (!invoice) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { invoiceId: invoice.id }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.url) {
-        // Redirect to Stripe Checkout
-        window.open(data.url, '_blank');
-        
-        setInvoice(prev => prev ? { ...prev, status: 'payment_processing' } : null);
-        
-        toast({
-          title: 'Payment Processing',
-          description: 'Redirecting to secure payment page...',
-        });
-      } else {
-        throw new Error('No payment URL received');
-      }
-    } catch (error: any) {
-      console.error('Error initiating payment:', error);
-      
-      // Enhanced error handling
-      let errorMessage = 'Failed to initiate payment';
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.error) {
-        errorMessage = error.error;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      toast({
-        title: 'Payment Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const getCurrentUserRole = async () => {
-    if (!invoice) return null;
-    
-    try {
-      const { data } = await supabase.auth.getUser();
-      const userId = data.user?.id;
-      
-      if (userId === invoice.client_id) return 'client';
-      if (userId === invoice.vendor_id) return 'vendor';
-      return null;
-    } catch {
-      return null;
     }
   };
 
@@ -377,103 +323,73 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
   }
 
   if (!invoice) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">No invoice data available</p>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
+    return null;
   }
 
   const hasClientSigned = !!invoice.client_signed_at;
   const hasVendorSigned = !!invoice.vendor_signed_at;
   const bothSigned = hasClientSigned && hasVendorSigned;
+  const isPaid = !!invoice.paid_at;
   const canSign = (userRole === 'client' && !hasClientSigned) || 
                   (userRole === 'vendor' && !hasVendorSigned);
+  const canPay = userRole === 'client' && bothSigned && !isPaid;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-primary" />
             Invoice {invoice.invoice_number}
-            <Badge variant={bothSigned ? 'default' : 'secondary'}>
-              {bothSigned ? 'Fully Signed' : 'Pending Signatures'}
+            <Badge variant={isPaid ? 'default' : bothSigned ? 'secondary' : 'outline'}>
+              {isPaid ? 'Paid' : bothSigned ? 'Fully Signed' : 'Pending Signatures'}
             </Badge>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-2">
+        <div className="space-y-6">
           {/* Service Fee Notice */}
           <Card className="border-orange-200 bg-orange-50">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <Info className="w-5 h-5 text-orange-600 mt-0.5" />
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-orange-800">
-                    Service Fee Information
-                  </p>
+                  <p className="text-sm font-medium text-orange-800">Service Fee Information</p>
                   <p className="text-xs text-orange-700">
-                    Our {invoice.service_fee_percentage}% service fee is deducted from the vendor's payment. 
-                    The fee varies based on the vendor's account tier (Free: 2%, Basic: 1.75%, Premium: 1.5%).
+                    Platform service fee of {invoice.service_fee_percentage}% is deducted from vendor payout.
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Invoice Details */}
-          <div className="grid grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Euro className="w-4 h-4" />
-                  Payment Breakdown
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total Amount:</span>
-                    <span className="font-medium">€{invoice.total_amount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-orange-600">
-                    <span className="text-sm flex items-center gap-1">
-                      <Percent className="w-3 h-3" />
-                      Service Fee ({invoice.service_fee_percentage}%):
-                    </span>
-                    <span className="font-medium">-€{invoice.service_fee_amount.toLocaleString()}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-semibold text-green-600">
-                    <span>Vendor Payout:</span>
-                    <span>€{invoice.vendor_payout_amount.toLocaleString()}</span>
-                  </div>
+          {/* Payment Breakdown */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Euro className="w-4 h-4" />
+                Payment Breakdown
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm">Total Amount:</span>
+                  <span className="font-medium">€{invoice.total_amount.toLocaleString()}</span>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Invoice Details
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Created:</span>
-                    <span>{new Date(invoice.created_at).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Status:</span>
-                    <Badge variant="secondary">{invoice.status.replace('_', ' ')}</Badge>
-                  </div>
+                <div className="flex justify-between text-orange-600">
+                  <span className="text-sm flex items-center gap-1">
+                    <Percent className="w-3 h-3" />
+                    Service Fee ({invoice.service_fee_percentage}%):
+                  </span>
+                  <span className="font-medium">-€{invoice.service_fee_amount.toLocaleString()}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <Separator />
+                <div className="flex justify-between text-lg font-semibold text-green-600">
+                  <span>Vendor Payout:</span>
+                  <span>€{invoice.vendor_payout_amount.toLocaleString()}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Signature Status */}
           <Card>
@@ -488,18 +404,16 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                   <User className="w-5 h-5 text-blue-500" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Client Signature</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {hasClientSigned ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 text-green-500" />
-                          <span className="text-xs text-green-600">
-                            Signed {new Date(invoice.client_signed_at!).toLocaleDateString()}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Pending signature</span>
-                      )}
-                    </div>
+                    {hasClientSigned ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <span className="text-xs text-green-600">
+                          Signed {new Date(invoice.client_signed_at!).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Pending</span>
+                    )}
                   </div>
                 </div>
 
@@ -507,18 +421,16 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                   <Building className="w-5 h-5 text-purple-500" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Vendor Signature</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {hasVendorSigned ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 text-green-500" />
-                          <span className="text-xs text-green-600">
-                            Signed {new Date(invoice.vendor_signed_at!).toLocaleDateString()}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Pending signature</span>
-                      )}
-                    </div>
+                    {hasVendorSigned ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <span className="text-xs text-green-600">
+                          Signed {new Date(invoice.vendor_signed_at!).toLocaleDateString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Pending</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -526,148 +438,90 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
           </Card>
 
           {/* Payment Status */}
-          {bothSigned && invoice.status !== 'paid' && (
-            <Card className="border-green-200 bg-green-50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-5 h-5 text-green-600" />
-                    <div>
-                      <p className="font-medium text-green-800">Ready for Payment</p>
-                      <p className="text-sm text-green-700">
-                        Both parties have signed. Client can now proceed with payment.
-                      </p>
-                    </div>
-                  </div>
-                  {userRole === 'client' && (invoice.status === 'pending_signatures' || invoice.status === 'ready_for_payment') && (
-                    <Button 
-                      onClick={initiatePayment}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Pay Now
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {invoice.status === 'paid' && (
+          {isPaid && (
             <Card className="border-green-200 bg-green-50">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                   <div>
-                    <p className="font-medium text-green-800">Payment Completed</p>
-                    <p className="text-sm text-green-700">
-                      Invoice has been paid successfully.
+                    <p className="text-sm font-medium text-green-800">Payment Completed</p>
+                    <p className="text-xs text-green-700">
+                      Paid on {new Date(invoice.paid_at!).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
-        </div>
 
-        <div className="flex justify-between pt-4 border-t">
-          <div className="flex gap-3">
+          {/* Actions */}
+          <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
             
-            {!bothSigned && invoice.status === 'pending_signatures' && (
-              <Button 
-                variant="destructive"
-                onClick={handleDeclineInvoice}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Decline Invoice
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex gap-3">
-            {canSign && (
-              <Button 
-                onClick={handleSign}
-                disabled={signing}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                {signing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Signing...
-                  </>
-                ) : (
-                  <>
+            {!isPaid && (
+              <>
+                <Button variant="destructive" onClick={handleDecline}>
+                  Decline Invoice
+                </Button>
+                
+                {canSign && (
+                  <Button onClick={handleSign} disabled={processing}>
                     <PenTool className="w-4 h-4 mr-2" />
-                    Sign Document
-                  </>
+                    Sign Invoice
+                  </Button>
                 )}
-              </Button>
-            )}
-            
-            {bothSigned && userRole === 'client' && (
-              <Button 
-                onClick={initiatePayment}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Pay Now
-              </Button>
+                
+                {canPay && (
+                  <Button onClick={handlePayment} disabled={processing}>
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Pay Now
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
-
-        {/* Signature Modal */}
-        <Dialog open={signModal.isOpen} onOpenChange={() => setSignModal({ isOpen: false, userRole: '', requiredName: '' })}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Digital Signature Required</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                To complete the digital signature, please type your {userRole === 'client' ? 'full name' : 'business name'} exactly as it appears in your BuildEasy account:
-              </div>
-              <div className="p-3 bg-muted rounded-md">
-                <Label className="text-sm font-medium">Required Name:</Label>
-                <div className="font-mono text-sm mt-1">
-                  {signModal.requiredName || 'Loading...'}
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="signatureName">Type your name below:</Label>
-                <Input
-                  id="signatureName"
-                  value={signatureName}
-                  onChange={(e) => setSignatureName(e.target.value)}
-                  placeholder="Enter your name exactly"
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSignModal({ isOpen: false, userRole: '', requiredName: '' });
-                    setSignatureName('');
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={processSignature}
-                  disabled={signing || !signatureName.trim()}
-                  className="bg-gradient-primary"
-                >
-                  {signing ? 'Signing...' : 'Sign'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </DialogContent>
+
+      {/* Signature Modal */}
+      <Dialog open={signModal} onOpenChange={setSignModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Digital Signature</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              To sign this invoice, please enter your name exactly as it appears in your profile:
+            </p>
+            
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm font-medium">Required name: {requiredName}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="signature">Your Signature</Label>
+              <Input
+                id="signature"
+                value={signatureName}
+                onChange={(e) => setSignatureName(e.target.value)}
+                placeholder="Enter your name"
+              />
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setSignModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={processSignature} disabled={processing || !signatureName.trim()}>
+                Confirm Signature
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
