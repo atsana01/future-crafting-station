@@ -28,6 +28,9 @@ import VendorPaymentBilling from "./pages/VendorPaymentBilling";
 import VendorDashboard from "./pages/VendorDashboard";
 import { RoleGuard } from "./components/RoleGuard";
 import { useAuth } from "@/contexts/AuthContext";
+import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
+import { AdminGuard } from "./components/AdminGuard";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +77,12 @@ const App = () => (
                   </VendorRouteHandler>
                 } />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin-dashboard" element={
+                  <AdminGuard>
+                    <AdminDashboard />
+                  </AdminGuard>
+                } />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/*" element={
                   <>

@@ -18,7 +18,7 @@ export const AuthButton = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [userType, setUserType] = useState<'client' | 'vendor'>('client');
+  const [userType, setUserType] = useState<'client' | 'vendor' | 'admin'>('client');
 
   useEffect(() => {
     if (user) {

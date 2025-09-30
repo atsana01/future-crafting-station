@@ -69,7 +69,7 @@ const Tickets = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [userType, setUserType] = useState<'client' | 'vendor' | null>(null);
+  const [userType, setUserType] = useState<'client' | 'vendor' | 'admin' | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

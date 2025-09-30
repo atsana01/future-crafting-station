@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_permissions: {
+        Row: {
+          granted_at: string
+          granted_by: string | null
+          id: string
+          permission_name: string
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permission_name: string
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          permission_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      analytics_cache: {
+        Row: {
+          computed_at: string
+          expires_at: string
+          id: string
+          metric_name: string
+          metric_value: Json
+        }
+        Insert: {
+          computed_at?: string
+          expires_at: string
+          id?: string
+          metric_name: string
+          metric_value: Json
+        }
+        Update: {
+          computed_at?: string
+          expires_at?: string
+          id?: string
+          metric_name?: string
+          metric_value?: Json
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -153,6 +201,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      page_views: {
+        Row: {
+          id: string
+          ip_address: unknown | null
+          page_path: string
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: unknown | null
+          page_path: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: unknown | null
+          page_path?: string
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          viewed_at?: string
+        }
+        Relationships: []
       }
       password_reset_tokens: {
         Row: {
@@ -821,6 +899,10 @@ export type Database = {
           vendor_rating: number
         }[]
       }
+      get_dashboard_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_public_vendor_directory: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -876,6 +958,10 @@ export type Database = {
           years_experience: number
         }[]
       }
+      get_user_growth_analytics: {
+        Args: { days?: number }
+        Returns: Json
+      }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["user_type"]
@@ -910,9 +996,17 @@ export type Database = {
           years_experience: number
         }[]
       }
+      get_vendor_performance_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_vendor_service_fee: {
         Args: { vendor_user_id: string }
         Returns: number
+      }
+      is_admin: {
+        Args: { user_id_param: string }
+        Returns: boolean
       }
       is_security_admin: {
         Args: { _user_id: string }
@@ -957,7 +1051,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       quote_status: "pending" | "quoted" | "accepted" | "declined" | "expired"
-      user_type: "client" | "vendor"
+      user_type: "client" | "vendor" | "admin"
       verification_status: "pending" | "verified" | "rejected"
     }
     CompositeTypes: {
@@ -1095,7 +1189,7 @@ export const Constants = {
         "cancelled",
       ],
       quote_status: ["pending", "quoted", "accepted", "declined", "expired"],
-      user_type: ["client", "vendor"],
+      user_type: ["client", "vendor", "admin"],
       verification_status: ["pending", "verified", "rejected"],
     },
   },
