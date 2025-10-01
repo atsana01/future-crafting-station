@@ -62,6 +62,11 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
     return <Navigate to="/auth" replace />;
   }
 
+  // Allow admin users to access all areas
+  if (userType === 'admin') {
+    return <>{children}</>;
+  }
+
   if (userType && !allowedUserTypes.includes(userType as 'client' | 'vendor')) {
     // Show error message for wrong account type
     toast.error(`Access denied. This area is for ${allowedUserTypes.join(' and ')} accounts only.`);

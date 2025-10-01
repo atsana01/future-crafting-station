@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const AdminSettings = () => {
   return (
@@ -8,13 +8,13 @@ const AdminSettings = () => {
           Platform Settings
         </h1>
         <p className="text-muted-foreground mt-1">
-          Configure platform settings and preferences
+          Configure platform-wide settings and preferences
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <p className="text-muted-foreground">Settings interface coming soon</p>
+          <CardTitle>Settings interface coming soon</CardTitle>
         </CardHeader>
         <CardContent />
       </Card>
