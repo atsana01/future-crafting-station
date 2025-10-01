@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
 import { exportToCSV } from '@/utils/csvExport';
+import { UserManagementModal } from '@/components/admin/UserManagementModal';
 
 interface Client {
   id: string;
@@ -25,9 +26,31 @@ const AdminClientsList = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedClient, setSelectedClient] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClients();
+    
+    // Real-time subscription for clients
+    const channel = supabase
+      .channel('clients-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: 'user_type=eq.client'
+        },
+        () => {
+          fetchClients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchClients = async () => {
@@ -133,7 +156,7 @@ const AdminClientsList = () => {
             <DataTable
               data={clients}
               columns={columns}
-              onRowClick={(client) => navigate(`/admin/users/clients/${client.user_id}`)}
+              onRowClick={(client) => setSelectedClient(client.user_id)}
               searchPlaceholder="Search clients by name, phone..."
               showDateFilter
               getItemId={(client) => client.id}
@@ -141,6 +164,13 @@ const AdminClientsList = () => {
           )}
         </CardContent>
       </Card>
+
+      <UserManagementModal
+        isOpen={!!selectedClient}
+        onClose={() => setSelectedClient(null)}
+        userId={selectedClient || ''}
+        userType="client"
+      />
     </div>
   );
 };

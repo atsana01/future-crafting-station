@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { ArrowLeft, Star, Clock } from 'lucide-react';
 import { exportToCSV } from '@/utils/csvExport';
+import { UserManagementModal } from '@/components/admin/UserManagementModal';
 
 interface Vendor {
   id: string;
@@ -27,9 +28,30 @@ const AdminVendorsList = () => {
   const navigate = useNavigate();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
 
   useEffect(() => {
     fetchVendors();
+    
+    // Real-time subscription for vendors
+    const channel = supabase
+      .channel('vendors-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'vendor_profiles'
+        },
+        () => {
+          fetchVendors();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchVendors = async () => {
@@ -167,7 +189,7 @@ const AdminVendorsList = () => {
             <DataTable
               data={vendors}
               columns={columns}
-              onRowClick={(vendor) => navigate(`/admin/users/vendors/${vendor.user_id}`)}
+              onRowClick={(vendor) => setSelectedVendor(vendor.user_id)}
               searchPlaceholder="Search vendors by name, location..."
               showDateFilter
               getItemId={(vendor) => vendor.id}
@@ -175,6 +197,13 @@ const AdminVendorsList = () => {
           )}
         </CardContent>
       </Card>
+
+      <UserManagementModal
+        isOpen={!!selectedVendor}
+        onClose={() => setSelectedVendor(null)}
+        userId={selectedVendor || ''}
+        userType="vendor"
+      />
     </div>
   );
 };

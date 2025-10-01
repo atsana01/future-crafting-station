@@ -27,6 +27,27 @@ const AdminUsersList = () => {
 
   useEffect(() => {
     fetchAdmins();
+    
+    // Real-time subscription for admin users
+    const channel = supabase
+      .channel('admins-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: 'user_type=eq.admin'
+        },
+        () => {
+          fetchAdmins();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchAdmins = async () => {

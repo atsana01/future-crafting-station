@@ -72,18 +72,6 @@ const HowItWorks = () => {
             </div>
           ))}
         </div>
-
-        {/* Call to Action */}
-        <div className="text-center mt-20">
-          <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Space?</h3>
-          <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Join thousands who've brought their visions to life with our trusted network of professionals.
-          </p>
-          <Button size="lg" className="bg-gradient-primary border-0 px-8 py-3 text-lg hover:shadow-elegant transition-all">
-            Start Building Today
-            <ArrowRight className="ml-2 w-5 h-5" />
-          </Button>
-        </div>
       </div>
     </section>
   );
