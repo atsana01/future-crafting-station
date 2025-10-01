@@ -3,13 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { DataTable } from '@/components/admin/DataTable';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { Users, Shield, UserPlus } from 'lucide-react';
+import { exportToCSV } from '@/utils/csvExport';
+import { logAdminAction } from '@/utils/auditLog';
 
 interface User {
   id: string;
@@ -68,6 +71,10 @@ const AdminUsers = () => {
       if (error) throw error;
 
       toast.success('User updated successfully');
+      await logAdminAction('update_user', 'profiles', selectedUser.id, undefined, {
+        full_name: selectedUser.full_name,
+        user_type: selectedUser.user_type
+      });
       setEditMode(false);
       fetchUsers();
     } catch (error) {

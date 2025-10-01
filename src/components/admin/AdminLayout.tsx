@@ -2,6 +2,8 @@ import { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AdminPeriodProvider } from '@/contexts/AdminPeriodContext';
+import { PeriodSelector } from './PeriodSelector';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -51,9 +53,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-hero">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-background">
+    <AdminPeriodProvider>
+      <div className="flex h-screen bg-gradient-hero">
+        {/* Sidebar */}
+        <aside className="w-64 border-r border-border bg-background">
         <div className="flex h-16 items-center gap-3 border-b border-border px-6">
           <div className="p-2 bg-gradient-primary rounded-lg">
             <Shield className="w-5 h-5 text-primary-foreground" />
@@ -102,10 +105,14 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
-    </div>
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="border-b border-border bg-background px-6 py-4">
+            <PeriodSelector />
+          </div>
+          {children}
+        </main>
+      </div>
+    </AdminPeriodProvider>
   );
 };
