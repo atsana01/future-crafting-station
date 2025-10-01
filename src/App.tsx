@@ -33,15 +33,15 @@ import AdminDashboard from "./pages/AdminDashboard";
 import { AdminGuard } from "./components/AdminGuard";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
-import AdminQuotes from "./pages/admin/AdminQuotes";
-import AdminTickets from "./pages/admin/AdminTickets";
-import AdminChats from "./pages/admin/AdminChats";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminVendors from "./pages/admin/AdminVendors";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
-import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAudit from "./pages/admin/AdminAudit";
+import AdminUsersHub from "./pages/admin/AdminUsersHub";
+import AdminUsersList from "./pages/admin/AdminUsersList";
+import AdminVendorsList from "./pages/admin/AdminVendorsList";
+import AdminClientsList from "./pages/admin/AdminClientsList";
+import AdminVendorDetail from "./pages/admin/AdminVendorDetail";
+import AdminClientDetail from "./pages/admin/AdminClientDetail";
 
 const queryClient = new QueryClient();
 
@@ -101,52 +101,61 @@ const App = () => (
                     </AdminLayout>
                   </AdminGuard>
                 } />
-                <Route path="/admin/quotes" element={
-                  <AdminGuard>
-                    <AdminLayout>
-                      <AdminQuotes />
-                    </AdminLayout>
-                  </AdminGuard>
-                } />
-                <Route path="/admin/tickets" element={
-                  <AdminGuard>
-                    <AdminLayout>
-                      <AdminTickets />
-                    </AdminLayout>
-                  </AdminGuard>
-                } />
-                <Route path="/admin/chats" element={
-                  <AdminGuard>
-                    <AdminLayout>
-                      <AdminChats />
-                    </AdminLayout>
-                  </AdminGuard>
-                } />
+                
+                {/* New Users Hub Structure */}
                 <Route path="/admin/users" element={
                   <AdminGuard>
                     <AdminLayout>
-                      <AdminUsers />
+                      <AdminUsersHub />
                     </AdminLayout>
                   </AdminGuard>
                 } />
-                <Route path="/admin/vendors" element={
+                <Route path="/admin/users/admins" element={
                   <AdminGuard>
                     <AdminLayout>
-                      <AdminVendors />
+                      <AdminUsersList />
                     </AdminLayout>
                   </AdminGuard>
                 } />
+                <Route path="/admin/users/vendors" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminVendorsList />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/users/vendors/:vendorId" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminVendorDetail />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/users/clients" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminClientsList />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                <Route path="/admin/users/clients/:clientId" element={
+                  <AdminGuard>
+                    <AdminLayout>
+                      <AdminClientDetail />
+                    </AdminLayout>
+                  </AdminGuard>
+                } />
+                
+                {/* Legacy redirects */}
+                <Route path="/admin/vendors" element={<Navigate to="/admin/users/vendors" replace />} />
+                <Route path="/admin/tickets" element={<Navigate to="/admin/users/vendors" replace />} />
+                <Route path="/admin/chats" element={<Navigate to="/admin/users/vendors" replace />} />
+                <Route path="/admin/quotes" element={<Navigate to="/admin/users/vendors" replace />} />
+                <Route path="/admin/invoices" element={<Navigate to="/admin/users/vendors" replace />} />
                 <Route path="/admin/analytics" element={
                   <AdminGuard>
                     <AdminLayout>
                       <AdminAnalytics />
-                    </AdminLayout>
-                  </AdminGuard>
-                } />
-                <Route path="/admin/invoices" element={
-                  <AdminGuard>
-                    <AdminLayout>
-                      <AdminInvoices />
                     </AdminLayout>
                   </AdminGuard>
                 } />

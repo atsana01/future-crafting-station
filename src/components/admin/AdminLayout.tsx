@@ -6,13 +6,8 @@ import { AdminPeriodProvider } from '@/contexts/AdminPeriodContext';
 import { PeriodSelector } from './PeriodSelector';
 import { 
   LayoutDashboard, 
-  FileText, 
-  Ticket, 
-  MessageSquare, 
   Users, 
-  Building2, 
   BarChart3, 
-  FileBarChart,
   Settings,
   ScrollText,
   LogOut,
@@ -27,14 +22,9 @@ interface AdminLayoutProps {
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/admin/overview' },
-  { icon: FileText, label: 'Quotes', path: '/admin/quotes' },
-  { icon: Ticket, label: 'Tickets', path: '/admin/tickets' },
-  { icon: MessageSquare, label: 'Chats', path: '/admin/chats' },
   { icon: Users, label: 'Users', path: '/admin/users' },
-  { icon: Building2, label: 'Vendors', path: '/admin/vendors' },
-  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
-  { icon: FileBarChart, label: 'Invoices', path: '/admin/invoices' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
   { icon: ScrollText, label: 'Audit Log', path: '/admin/audit' },
 ];
 
@@ -73,7 +63,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           <nav className="space-y-1 p-4">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = location.pathname.startsWith(item.path);
               
               return (
                 <Link
