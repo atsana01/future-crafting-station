@@ -713,6 +713,139 @@ export type Database = {
           },
         ]
       }
+      rfi_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number
+          id: string
+          message_id: string | null
+          mime_type: string
+          rfi_id: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size: number
+          id?: string
+          message_id?: string | null
+          mime_type: string
+          rfi_id: string
+          storage_path: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          id?: string
+          message_id?: string | null
+          mime_type?: string
+          rfi_id?: string
+          storage_path?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfi_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "rfi_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfi_attachments_rfi_id_fkey"
+            columns: ["rfi_id"]
+            isOneToOne: false
+            referencedRelation: "rfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfi_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          is_hidden: boolean | null
+          rfi_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean | null
+          rfi_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean | null
+          rfi_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfi_messages_rfi_id_fkey"
+            columns: ["rfi_id"]
+            isOneToOne: false
+            referencedRelation: "rfis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfis: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          question: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          ticket_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          question: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          ticket_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          question?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          ticket_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfis_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_audit_logs: {
         Row: {
           action: string
@@ -1108,6 +1241,10 @@ export type Database = {
       }
       is_security_admin: {
         Args: { _user_id: string }
+        Returns: boolean
+      }
+      is_ticket_participant: {
+        Args: { _ticket_id: string; _user_id: string }
         Returns: boolean
       }
       log_admin_action: {

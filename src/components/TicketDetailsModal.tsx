@@ -1,32 +1,63 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar, MapPin, DollarSign, Clock, Image, FileText } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, MapPin, DollarSign, Clock, Image, FileText, MessageSquare, HelpCircle, Receipt } from 'lucide-react';
+import RFIList from './rfi/RFIList';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TicketDetailsModalProps {
   ticket: any;
   isOpen: boolean;
   onClose: () => void;
+  userRole?: 'client' | 'vendor';
 }
 
-const TicketDetailsModal = ({ ticket, isOpen, onClose }: TicketDetailsModalProps) => {
+const TicketDetailsModal = ({ ticket, isOpen, onClose, userRole }: TicketDetailsModalProps) => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('details');
+  
   if (!ticket) return null;
+
+  // Determine user role if not provided
+  const role = userRole || (user?.id === ticket.vendor?.id || user?.id === ticket.vendorId ? 'vendor' : 'client');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
-            Request Details - {ticket.vendor.name}
+            {role === 'vendor' ? 'Quote Request' : 'Request Details'} - {ticket.vendor?.name || ticket.project?.title}
           </DialogTitle>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[70vh] pr-4">
-          <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="details" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Details
+            </TabsTrigger>
+            <TabsTrigger value="chat" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Chat
+            </TabsTrigger>
+            <TabsTrigger value="rfis" className="flex items-center gap-2">
+              <HelpCircle className="w-4 h-4" />
+              RFIs
+            </TabsTrigger>
+            <TabsTrigger value="quotes" className="flex items-center gap-2">
+              <Receipt className="w-4 h-4" />
+              Quotes
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="details" className="mt-4">
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-6">
             {/* Request Information */}
             <div className="bg-muted/30 p-4 rounded-lg">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -134,14 +165,46 @@ const TicketDetailsModal = ({ ticket, isOpen, onClose }: TicketDetailsModalProps
                 )}
               </div>
             )}
-          </div>
-        </ScrollArea>
+              </div>
+            </ScrollArea>
+          </TabsContent>
 
-        <div className="flex justify-end gap-2 pt-4 border-t">
+          <TabsContent value="chat" className="mt-4">
+            <div className="h-[60vh] flex items-center justify-center bg-muted/30 rounded-lg">
+              <div className="text-center">
+                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h4 className="font-medium mb-2">Chat Feature</h4>
+                <p className="text-sm text-muted-foreground">
+                  Chat functionality will appear here
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="rfis" className="mt-4">
+            <ScrollArea className="max-h-[60vh]">
+              <RFIList ticketId={ticket.id} userRole={role} />
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="quotes" className="mt-4">
+            <div className="h-[60vh] flex items-center justify-center bg-muted/30 rounded-lg">
+              <div className="text-center">
+                <Receipt className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h4 className="font-medium mb-2">Quotes</h4>
+                <p className="text-sm text-muted-foreground">
+                  Quote history and details will appear here
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex justify-end gap-2 pt-4 border-t mt-4">
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          {ticket.status === 'quoted' && ticket.quotedAmount && (
+          {activeTab === 'details' && ticket.status === 'quoted' && ticket.quotedAmount && (
             <Button className="bg-gradient-primary">
               Accept Quote
             </Button>
