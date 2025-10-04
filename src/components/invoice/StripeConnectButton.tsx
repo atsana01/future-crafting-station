@@ -32,20 +32,21 @@ const StripeConnectButton = ({ onComplete }: StripeConnectButtonProps) => {
       setChecking(true);
       const { data, error } = await supabase
         .from('vendor_profiles')
-        .select('stripe_connect_id, stripe_onboarding_complete, stripe_charges_enabled, stripe_payouts_enabled')
+        .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
-      setStripeConnectId(data?.stripe_connect_id || null);
-      setOnboardingComplete(data?.stripe_onboarding_complete || false);
-      setChargesEnabled(data?.stripe_charges_enabled || false);
-      setPayoutsEnabled(data?.stripe_payouts_enabled || false);
+      const row: any = data || {};
+      setStripeConnectId(row.stripe_connect_id || null);
+      setOnboardingComplete(!!row.stripe_onboarding_complete);
+      setChargesEnabled(!!row.stripe_charges_enabled);
+      setPayoutsEnabled(!!row.stripe_payouts_enabled);
 
       // If account exists but status unknown, check with Stripe
-      if (data?.stripe_connect_id && !data?.stripe_onboarding_complete) {
-        await updateStripeStatus(data.stripe_connect_id);
+      if (row.stripe_connect_id && !row.stripe_onboarding_complete) {
+        await updateStripeStatus(row.stripe_connect_id);
       }
     } catch (error: any) {
       console.error('Error checking Stripe status:', error);

@@ -44,14 +44,15 @@ const CreateInvoiceModal = ({
 
       const { data: vendorProfile, error: profileError } = await supabase
         .from('vendor_profiles')
-        .select('stripe_connect_id, stripe_onboarding_complete, stripe_charges_enabled')
+        .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
-      setStripeConnectId(vendorProfile?.stripe_connect_id || null);
-      const isReady = vendorProfile?.stripe_onboarding_complete && vendorProfile?.stripe_charges_enabled;
+      const vp: any = vendorProfile || {};
+      setStripeConnectId(vp.stripe_connect_id || null);
+      const isReady = !!(vp.stripe_onboarding_complete && vp.stripe_charges_enabled);
       setStripeReady(isReady);
 
       if (!isReady) {
@@ -119,9 +120,9 @@ const CreateInvoiceModal = ({
       const latestQuote = quoteData.quotes[0];
 
       // Create invoice
-      const { data: invoice, error: invoiceError } = await supabase
+      const { data: invoice, error: invoiceError } = await (supabase as any)
         .from('invoices')
-        .insert({
+        .insert([{
           vendor_id: user.id,
           client_id: quoteData.client_id,
           quote_id: latestQuote.id,
@@ -139,7 +140,7 @@ const CreateInvoiceModal = ({
           dwelling_age_years: additionalData.dwelling_age_years,
           materials_percentage: additionalData.materials_percentage,
           property_area_sqm: additionalData.property_area_sqm
-        })
+        }])
         .select()
         .single();
 
@@ -159,9 +160,9 @@ const CreateInvoiceModal = ({
           is_material: item.type === 'material' || false
         }));
 
-        const { error: itemsError } = await supabase
+        const { error: itemsError } = await (supabase as any)
           .from('invoice_items')
-          .insert(items);
+          .insert(items as any[]);
 
         if (itemsError) {
           console.error('Error creating invoice items:', itemsError);

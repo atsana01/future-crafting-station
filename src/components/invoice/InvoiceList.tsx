@@ -46,8 +46,21 @@ const InvoiceList = ({ userRole, userId }: InvoiceListProps) => {
         .eq(filterColumn, userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setInvoices(data || []);
+      const rows = (data as any[]) || [];
+      setInvoices(rows.map((r: any) => ({
+        id: r.id,
+        invoice_number: r.invoice_number,
+        legal_invoice_number: r.legal_invoice_number ?? null,
+        total_amount: Number(r.total_amount ?? 0),
+        subtotal_amount: Number(r.subtotal_amount ?? 0),
+        vat_amount: Number(r.vat_amount ?? 0),
+        vat_rate: Number(r.vat_rate ?? 0),
+        status: r.status ?? 'draft',
+        created_at: r.created_at,
+        stripe_pdf_url: r.stripe_pdf_url ?? null,
+        vendor_id: r.vendor_id,
+        client_id: r.client_id,
+      })) );
     } catch (error: any) {
       console.error('Error fetching invoices:', error);
       toast.error('Failed to load invoices');
