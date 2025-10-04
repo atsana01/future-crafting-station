@@ -13,6 +13,7 @@ import InvoiceModal from '@/components/InvoiceModal';
 import { formatClientName } from '@/utils/formatters';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
 import TicketDetailsModal from '@/components/TicketDetailsModal';
+import CreateInvoiceModal from '@/components/invoice/CreateInvoiceModal';
 
 interface QuoteRequest {
   id: string;
@@ -64,7 +65,7 @@ const VendorDashboard = () => {
     vendorId: ''
   });
 
-  const [invoiceModal, setInvoiceModal] = useState<{
+  const [createInvoiceModal, setCreateInvoiceModal] = useState<{
     isOpen: boolean;
     quoteRequestId: string;
   }>({
@@ -460,7 +461,7 @@ const VendorDashboard = () => {
                             <Button 
                               size="sm" 
                               variant="modern"
-                              onClick={() => setInvoiceModal({ isOpen: true, quoteRequestId: quote.id })}
+                              onClick={() => setCreateInvoiceModal({ isOpen: true, quoteRequestId: quote.id })}
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
                               <Euro className="w-4 h-4 mr-1" />

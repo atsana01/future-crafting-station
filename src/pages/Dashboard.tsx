@@ -2,8 +2,9 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Home, MessageSquare, User, Trash2 } from 'lucide-react';
+import { Plus, Home, MessageSquare, User, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import InvoiceList from '@/components/invoice/InvoiceList';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -106,6 +107,11 @@ const Dashboard = () => {
               </CardHeader>
             </Card>
           </Link>
+        </div>
+
+        {/* Invoices Section */}
+        <div className="mt-8">
+          <InvoiceList userRole="client" userId={user?.id || ''} />
         </div>
       </div>
     </div>
