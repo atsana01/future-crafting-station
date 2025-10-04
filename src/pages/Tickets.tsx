@@ -18,8 +18,7 @@ import UpdateQuoteModal from '@/components/UpdateQuoteModal';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
 import NegotiateQuoteModal from '@/components/NegotiateQuoteModal';
 import InvoiceModal from '@/components/InvoiceModal';
-import ViewRFIsModal from '@/components/ViewRFIsModal';
-import { 
+import {
   ArrowLeft, 
   Search, 
   Filter, 
@@ -155,11 +154,6 @@ const ClientDashboard = () => {
     isOpen: boolean;
     quoteRequestId: string;
   }>({ isOpen: false, quoteRequestId: '' });
-  const [viewRFIsModal, setViewRFIsModal] = useState<{
-    isOpen: boolean;
-    quoteRequestId: string;
-    projectTitle: string;
-  }>({ isOpen: false, quoteRequestId: '', projectTitle: '' });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -774,19 +768,18 @@ const ClientDashboard = () => {
                          </Button>
                          )}
                          
-                         <Button 
-                           variant="outline" 
-                           size="sm"
-                           onClick={() => setViewRFIsModal({
-                             isOpen: true,
-                             quoteRequestId: ticket.id,
-                             projectTitle: ticket.vendor.name
-                           })}
-                           className="flex items-center gap-2 hover:bg-blue-50 transition-colors border-blue-200 text-blue-700"
-                         >
-                           <FileText className="w-4 h-4" />
-                           <span className="hidden sm:inline">View RFIs</span>
-                         </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTicket(ticket);
+                              setIsDetailsModalOpen(true);
+                            }}
+                            className="flex items-center gap-2"
+                          >
+                            <FileText className="w-4 h-4" />
+                            <span className="hidden sm:inline">View Details & RFIs</span>
+                          </Button>
                          
                          {ticket.status === 'accepted' && (
                            <Button 
@@ -893,13 +886,6 @@ const ClientDashboard = () => {
             }}
           />
         )}
-
-        <ViewRFIsModal
-          isOpen={viewRFIsModal.isOpen}
-          onClose={() => setViewRFIsModal({ isOpen: false, quoteRequestId: '', projectTitle: '' })}
-          quoteRequestId={viewRFIsModal.quoteRequestId}
-          projectTitle={viewRFIsModal.projectTitle}
-        />
 
         <InvoiceModal
           isOpen={invoiceModal.isOpen}

@@ -9,11 +9,10 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import EnhancedSendQuoteModal from '@/components/EnhancedSendQuoteModal';
-import FormalRFIModal from '@/components/FormalRFIModal';
 import InvoiceModal from '@/components/InvoiceModal';
-import ViewRFIsModal from '@/components/ViewRFIsModal';
 import { formatClientName } from '@/utils/formatters';
 import EnhancedChatModal from '@/components/EnhancedChatModal';
+import TicketDetailsModal from '@/components/TicketDetailsModal';
 
 interface QuoteRequest {
   id: string;
@@ -48,17 +47,8 @@ const VendorDashboard = () => {
     projectTitle: ''
   });
 
-  const [rfiModal, setRfiModal] = useState<{
-    isOpen: boolean;
-    quoteRequestId: string;
-    projectTitle: string;
-    clientId: string;
-  }>({
-    isOpen: false,
-    quoteRequestId: '',
-    projectTitle: '',
-    clientId: ''
-  });
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [ticketDetailsOpen, setTicketDetailsOpen] = useState(false);
 
   const [chatModal, setChatModal] = useState<{
     isOpen: boolean;
@@ -82,15 +72,6 @@ const VendorDashboard = () => {
     quoteRequestId: ''
   });
 
-  const [viewRFIsModal, setViewRFIsModal] = useState<{
-    isOpen: boolean;
-    quoteRequestId: string;
-    projectTitle: string;
-  }>({
-    isOpen: false,
-    quoteRequestId: '',
-    projectTitle: ''
-  });
 
   useEffect(() => {
     fetchQuoteRequests();
@@ -209,13 +190,16 @@ const VendorDashboard = () => {
     setSendQuoteModal({ isOpen: false, quoteRequestId: '', projectTitle: '' });
   };
 
-  const handleRFI = (quoteRequestId: string, projectTitle: string, clientId: string) => {
-    setRfiModal({
-      isOpen: true,
-      quoteRequestId,
-      projectTitle,
-      clientId
+  const handleViewTicket = (quote: any) => {
+    setSelectedTicket({
+      id: quote.id,
+      project: quote.project,
+      client: quote.client,
+      status: quote.status,
+      created_at: quote.created_at,
+      vendorId: user?.id
     });
+    setTicketDetailsOpen(true);
   };
 
   const handleChat = (quoteRequestId: string, projectTitle: string, clientId: string, vendorId: string) => {
@@ -484,25 +468,13 @@ const VendorDashboard = () => {
                             </Button>
                           )}
                           <Button 
-                            variant="modern" 
-                            size="sm"
-                            onClick={() => handleRFI(quote.id, quote.project.title, quote.client.user_id)}
-                          >
-                            <BsCardChecklist className="w-4 h-4 mr-1" />
-                            RFI
-                          </Button>
-                          <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => setViewRFIsModal({
-                              isOpen: true,
-                              quoteRequestId: quote.id,
-                              projectTitle: quote.project?.title || 'Project'
-                            })}
-                            className="flex items-center gap-2 hover:bg-blue-50 transition-colors border-blue-200 text-blue-700"
+                            onClick={() => handleViewTicket(quote)}
+                            className="flex items-center gap-2"
                           >
                             <FileText className="w-4 h-4" />
-                            View RFIs
+                            View Details
                           </Button>
                         </div>
                       </div>
@@ -523,16 +495,6 @@ const VendorDashboard = () => {
           onQuoteSent={handleQuoteSent}
         />
 
-        <FormalRFIModal
-          isOpen={rfiModal.isOpen}
-          onClose={() => setRfiModal({ isOpen: false, quoteRequestId: '', projectTitle: '', clientId: '' })}
-          quoteRequestId={rfiModal.quoteRequestId}
-          projectTitle={rfiModal.projectTitle}
-          clientId={rfiModal.clientId}
-          vendorId={user?.id}
-          isVendor={true}
-        />
-
         <EnhancedChatModal
           isOpen={chatModal.isOpen}
           onClose={() => setChatModal({ isOpen: false, quoteRequestId: '', projectTitle: '', clientId: '', vendorId: '' })}
@@ -542,18 +504,14 @@ const VendorDashboard = () => {
           vendorId={chatModal.vendorId}
         />
 
-        <InvoiceModal
-          isOpen={invoiceModal.isOpen}
-          onClose={() => setInvoiceModal({ isOpen: false, quoteRequestId: '' })}
-          quoteRequestId={invoiceModal.quoteRequestId}
-          onInvoiceCreated={() => fetchQuoteRequests()}
-        />
-
-        <ViewRFIsModal
-          isOpen={viewRFIsModal.isOpen}
-          onClose={() => setViewRFIsModal({ isOpen: false, quoteRequestId: '', projectTitle: '' })}
-          quoteRequestId={viewRFIsModal.quoteRequestId}
-          projectTitle={viewRFIsModal.projectTitle}
+        <TicketDetailsModal
+          ticket={selectedTicket}
+          isOpen={ticketDetailsOpen}
+          onClose={() => {
+            setTicketDetailsOpen(false);
+            setSelectedTicket(null);
+          }}
+          userRole="vendor"
         />
       </div>
     </div>
