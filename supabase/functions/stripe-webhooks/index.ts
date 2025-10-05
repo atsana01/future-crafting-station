@@ -1,147 +1,120 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Stripe from 'https://esm.sh/stripe@14.5.0?target=deno';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2023-10-16',
+  httpClient: Stripe.createFetchHttpClient(),
 });
 
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+};
+
 serve(async (req) => {
-  const signature = req.headers.get('stripe-signature');
-  if (!signature) {
-    console.error('No signature header');
-    return new Response('No signature', { status: 400 });
-  }
-
-  const body = await req.text();
-  const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-
-  if (!webhookSecret) {
-    console.error('No webhook secret configured');
-    return new Response('Webhook secret not configured', { status: 500 });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      webhookSecret
-    );
-
-    console.log('Webhook event received:', event.type, 'ID:', event.id);
-
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    switch (event.type) {
-      case 'invoice.finalized': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice finalized:', invoice.id);
-
-        await supabaseClient
-          .from('invoices')
-          .update({ 
-            status: 'sent',
-            stripe_pdf_url: invoice.invoice_pdf || null
-          })
-          .eq('stripe_invoice_id', invoice.id);
-        break;
-      }
-
-      case 'invoice.sent': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice sent:', invoice.id);
-
-        await supabaseClient
-          .from('invoices')
-          .update({ status: 'sent' })
-          .eq('stripe_invoice_id', invoice.id);
-        break;
-      }
-
-      case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice paid:', invoice.id, 'Amount:', invoice.amount_paid);
-
-        await supabaseClient
-          .from('invoices')
-          .update({
-            status: 'paid',
-            paid_at: new Date().toISOString(),
-            payment_intent_id: invoice.payment_intent as string || null
-          })
-          .eq('stripe_invoice_id', invoice.id);
-        break;
-      }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice payment failed:', invoice.id);
-
-        await supabaseClient
-          .from('invoices')
-          .update({ status: 'payment_failed' })
-          .eq('stripe_invoice_id', invoice.id);
-        break;
-      }
-
-      case 'invoice.voided': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice voided:', invoice.id);
-
-        await supabaseClient
-          .from('invoices')
-          .update({ status: 'voided' })
-          .eq('stripe_invoice_id', invoice.id);
-        break;
-      }
-
-      case 'invoice.marked_uncollectible': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice marked uncollectible:', invoice.id);
-
-        await supabaseClient
-          .from('invoices')
-          .update({ status: 'uncollectible' })
-          .eq('stripe_invoice_id', invoice.id);
-        break;
-      }
-
-      case 'account.updated': {
-        const account = event.data.object as Stripe.Account;
-        console.log('Account updated:', account.id);
-
-        // Update vendor stripe capabilities
-        await supabaseClient
-          .from('vendor_profiles')
-          .update({
-            stripe_charges_enabled: account.charges_enabled,
-            stripe_payouts_enabled: account.payouts_enabled,
-            stripe_onboarding_complete: account.details_submitted,
-          })
-          .eq('stripe_connect_id', account.id);
-        break;
-      }
-
-      default:
-        console.log('Unhandled event type:', event.type);
+    const signature = req.headers.get('stripe-signature');
+    if (!signature) {
+      return new Response('No signature', { status: 400, headers: corsHeaders });
     }
 
-    return new Response(
-      JSON.stringify({ received: true, eventType: event.type }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    const body = await req.text();
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
+    
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    } catch (err: any) {
+      console.error('Webhook signature verification failed:', err.message);
+      return new Response(`Webhook Error: ${err.message}`, { 
+        status: 400, 
+        headers: corsHeaders 
+      });
+    }
 
+    console.log('Webhook event received:', event.type);
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Store webhook event for audit
+    const { error: webhookError } = await supabase
+      .from('stripe_webhook_events')
+      .insert({
+        event_id: event.id,
+        event_type: event.type,
+        stripe_account_id: event.account || null,
+        payload: event as any,
+      });
+
+    if (webhookError && webhookError.code !== '23505') { // Ignore duplicate key errors
+      console.error('Failed to store webhook event:', webhookError);
+    }
+
+    // Handle invoice events
+    if (event.type.startsWith('invoice.')) {
+      const invoice = event.data.object as Stripe.Invoice;
+      const stripeInvoiceId = invoice.id;
+
+      let status = 'draft';
+      let paidAt = null;
+
+      switch (event.type) {
+        case 'invoice.finalized':
+          status = 'open';
+          break;
+        case 'invoice.sent':
+          status = 'sent';
+          break;
+        case 'invoice.paid':
+          status = 'paid';
+          paidAt = new Date(invoice.status_transitions.paid_at! * 1000).toISOString();
+          break;
+        case 'invoice.payment_failed':
+          status = 'payment_failed';
+          break;
+        case 'invoice.voided':
+          status = 'void';
+          break;
+      }
+
+      // Update invoice in database
+      const { error: updateError } = await supabase.rpc(
+        'update_invoice_from_webhook',
+        {
+          p_stripe_invoice_id: stripeInvoiceId,
+          p_status: status,
+          p_paid_at: paidAt,
+        }
+      );
+
+      if (updateError) {
+        console.error('Failed to update invoice:', updateError);
+        throw updateError;
+      }
+
+      console.log(`Invoice ${stripeInvoiceId} updated to status: ${status}`);
+    }
+
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    });
   } catch (error: any) {
-    console.error('Webhook error:', error.message);
+    console.error('Webhook handler error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });

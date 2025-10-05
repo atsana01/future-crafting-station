@@ -991,6 +991,47 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          event_type: string
+          id: string
+          invoice_id: string | null
+          payload: Json
+          processed_at: string | null
+          stripe_account_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          invoice_id?: string | null
+          payload: Json
+          processed_at?: string | null
+          stripe_account_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          invoice_id?: string | null
+          payload?: Json
+          processed_at?: string | null
+          stripe_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_webhook_events_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets: {
         Row: {
           assigned_to: string | null
@@ -1427,6 +1468,14 @@ export type Database = {
           access_type: string
           accessing_user_id: string
           vendor_user_id: string
+        }
+        Returns: undefined
+      }
+      update_invoice_from_webhook: {
+        Args: {
+          p_paid_at?: string
+          p_status: string
+          p_stripe_invoice_id: string
         }
         Returns: undefined
       }
